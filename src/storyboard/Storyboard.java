@@ -4,6 +4,7 @@ package storyboard;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Point;
@@ -16,8 +17,11 @@ import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
@@ -27,7 +31,10 @@ import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 
+import quicktime.std.comp.Component;
+
 import fr.lri.swingstates.canvas.CImage;
+import fr.lri.swingstates.canvas.CShape;
 import fr.lri.swingstates.canvas.CStateMachine;
 import fr.lri.swingstates.canvas.Canvas;
 import fr.lri.swingstates.debug.StateMachineVisualization;
@@ -36,12 +43,14 @@ import fr.lri.swingstates.sm.JExtensionalTag;
 import fr.lri.swingstates.sm.JStateMachine;
 import fr.lri.swingstates.sm.State;
 import fr.lri.swingstates.sm.Transition;
+import fr.lri.swingstates.sm.JStateMachine.PressOnComponent;
 import fr.lri.swingstates.sm.transitions.Drag;
 import fr.lri.swingstates.sm.transitions.Event;
 import fr.lri.swingstates.sm.transitions.KeyType;
 import fr.lri.swingstates.sm.transitions.Leave;
 import fr.lri.swingstates.sm.transitions.Release;
 import fr.lri.swingstates.sm.transitions.TimeOut;
+import fr.lri.swingstates.canvas.CRectangle ;
 
 /**
  * The Storyboard application.
@@ -54,6 +63,11 @@ public class Storyboard extends JFrame{
 	 * The StateMachine attached to the LayeredPanel.
 	 */
 	private JStateMachine sm;
+	
+	/**
+	 * The state machine attached to the toolbar
+	 */
+	private JStateMachine toolbarStateMachine;
 	
 	/**
 	 * Contains the FileTree, the Preview and the Flipchart.
@@ -94,6 +108,26 @@ public class Storyboard extends JFrame{
 	 * The Flipchart where the Storyboard can be arranged.
 	 */
 	private JPanel flipchart;
+	
+	/**
+	 * Toolbar panel
+	 */
+	private JPanel toolbarPanel;
+	
+	/**
+	 * Cursor button
+	 */
+	private JButton cursorButton;
+	
+	/**
+	 * Rectangle button
+	 */
+	private JButton rectangleButton;
+	
+	/**
+	 * Text button
+	 */
+	private JButton textButton;
 	
 	/**
 	 * The name of the currently selected File of the FileTree.
@@ -189,9 +223,11 @@ public class Storyboard extends JFrame{
         	}
         	Transition dragInside = new Drag(BUTTON1,  ">> draggingInsideFlipchart") {
         		public void action(){
-        			movePicAndCap(getPoint());
-        			panel.repaint(); 
-        			movingStateMachine.disarmTimer("drag");
+        			
+            		movePicAndCap(getPoint());
+            		panel.repaint(); 
+            		movingStateMachine.disarmTimer("drag");
+
         		}
         	};
         	Transition timeout = new TimeOut(">> draggingInsideFlipchart");
@@ -207,19 +243,123 @@ public class Storyboard extends JFrame{
         
         public State frameSelected = new State() {	
         	
+        	CRectangle rect;
+        	Point pOrig, pEnd;
+        	int selectedShape;
+        	LinkedList<CShape> c;
+        	
         	public void enter(){
         		frames[selectedFrame].setBorder(BorderFactory.createLineBorder(Color.yellow,3));
         		flipchart.setBackground(Color.darkGray);
         		panel.requestFocus();
+        		rectangleButton.setEnabled(true);
+        		textButton.setEnabled(true);
         	}
-        	
-
-            
+   			
         	Transition deselect = new Event("deselectionEvent", ">> idling");
+        	
+        	Transition press = new PressOnComponent(CStateMachine.BUTTON1, ">> frameSelected") {
+        		
+        		public void action() {
+        			
+        			System.out.println("press --------------------------");
+
+        			
+        			if (cursorButton.isSelected()) {
+        				
+        				Point mouse = (Point)this.getPoint();
+                		selectedFrame = whichSection(mouse);
+                		pOrig = realPointInSection(mouse, selectedFrame);
+                		c = frames[selectedFrame].getCanvas().getFilledShapes();
+                		int i = 0;
+                		boolean found = false;
+                		// TODO: weird, fix it 
+                		for(CShape shape : c){
+                			
+                			if ((shape.contains(pOrig) != null) && shape.getClass().equals(CRectangle.class) && !found) {
+                				selectedShape = i;
+                    			System.out.println("press FOUNDED SHAPE " + selectedShape);
+                				found = true;
+                			} else {
+                				selectedShape = -1;
+                			}
+                			i++;
+                			   // do what you like with it
+                		}
+        				
+        			} else if (rectangleButton.isSelected()) {
+        				
+        				Point mouse = (Point)this.getPoint();
+                		selectedFrame = whichSection(mouse);
+        				pOrig = realPointInSection(mouse, selectedFrame);
+
+        				rect = new CRectangle(pOrig, 0, 0) ;
+        				rect.setFillPaint(Color.lightGray);
+        				rect.setTransparencyFill(0);
+                		selectedFrame = whichSection(mouse);
+        				frames[selectedFrame].addShape(rect);
+        				frames[selectedFrame].repaint();
+            			panel.repaint(); 
+        				
+        			} else if (textButton.isSelected()) {
+        				
+        			}
+        			
+        		}
+        		
+        	};
+        	
+        	Transition drag = new DragOnComponent(CStateMachine.BUTTON1, ">> frameSelected") {
+        		
+        		public void action() {
+        			
+        			System.out.println("Dragging");
+        			
+        			Point mouse = (Point)this.getPoint();
+    				pEnd = realPointInSection(mouse, selectedFrame);
+        			
+        			if (cursorButton.isSelected()) {
+        				
+        				if (selectedShape != -1) {
+        				
+        					Point p = new Point();
+            				p.x = (int) c.get(selectedShape).getMinX();
+            				p.y = (int) c.get(selectedShape).getMinY();
+            				
+            				Point pTrans = transformedPoint(pOrig, pEnd, p);
+            				
+            				System.out.println("Shape origin (" + p.x + ", " + p.y + ")");
+            				System.out.println("pOrig (" + pOrig.x + ", " + pOrig.y + ")");
+            				System.out.println("pEnd (" + pEnd.x + ", " + pEnd.y + ")");
+            				System.out.println("pTrans (" + pTrans.x + ", " + pTrans.y + ")");
+
+            				c.get(selectedShape).setReferencePoint(pTrans.x, pTrans.y);
+            				
+            				System.out.println("Shape moved (" + c.get(selectedShape).getMinX() + ", " + c.get(selectedShape).getMinY() + ")");
+            				
+            				frames[selectedFrame].repaint();
+                			panel.repaint(); 
+        					
+        				}			
+            			
+        			} else if (rectangleButton.isSelected()) {
+        				
+        				
+        				rect.setDiagonal(pOrig, pEnd);
+        				
+        			} else if (textButton.isSelected()) {
+        				
+        			}
+       			
+        		}
+        		
+        	};
         	
             public void leave(){
             	resetBorders();
             	flipchart.setBackground(Color.lightGray);
+        		rectangleButton.setEnabled(false);
+        		textButton.setEnabled(false);
             }
         };
         
@@ -326,15 +466,34 @@ public class Storyboard extends JFrame{
 				}
 			}
 		});
-	
+		
+		toolbarPanel = new JPanel();
+		toolbarPanel.setPreferredSize(new Dimension(SPACING, WINY));
+		toolbarPanel.setLayout(new FlowLayout());
+		cursorButton = new JButton("C");
+		cursorButton.setPreferredSize(new Dimension(SPACING, SPACING));
+		
+		rectangleButton = new JButton("R");
+		rectangleButton.setPreferredSize(new Dimension(SPACING, SPACING));
+		rectangleButton.setEnabled(false);
+
+		textButton = new JButton("T");
+		textButton.setPreferredSize(new Dimension(SPACING, SPACING));
+		textButton.setEnabled(false);
+		
+		toolbarPanel.add(cursorButton);
+		toolbarPanel.add(rectangleButton);
+		toolbarPanel.add(textButton);
+		
 		flipchart = new JPanel(new GridLayout(2,3));
 		flipTag = new JExtensionalTag(){};
 		flipTag.addTo(flipchart);
-		flipchart.setPreferredSize(new Dimension(WINX-LEFTX, WINY));
+		flipchart.setPreferredSize(new Dimension(WINX-LEFTX-SPACING, WINY));
 		flipchart.setBorder(BorderFactory.createLineBorder(Color.black));
 		
 		contentPane.add(leftBar, BorderLayout.LINE_START);
-		contentPane.add(flipchart, BorderLayout.CENTER);
+		contentPane.add(toolbarPanel, BorderLayout.CENTER);
+		contentPane.add(flipchart, BorderLayout.LINE_END);
 		panel.add(contentPane);
 	
 		this.add(panel);
@@ -440,6 +599,7 @@ public class Storyboard extends JFrame{
 	                	System.out.println("delete");
 	                }
 	            };
+	            
 	            Transition exit = new KeyType('e',">> idling") {
 	            	public void action(){
 	            		selectedFrame = 0;
@@ -448,19 +608,49 @@ public class Storyboard extends JFrame{
 	            	}	
 	            };
 	            
-	        	Transition deselect = new ClickOnComponent(CStateMachine.BUTTON1, ">> idling"){
+	        	Transition  deselect = new ClickOnComponent(CStateMachine.BUTTON1, ">> idling"){
 	        		public boolean guard(){
 	        			System.out.println("guard");
 	        			//should return true when the cursor is on the flipchart but not on the selected frame
 	        			
-	        			if(frames[selectedFrame]!=null){
-	        				boolean contains =isInFrame(getPoint(),selectedFrame);
-	        				if(contains){
-	        					System.out.println("Cursor ist in dem selektierten Frame");
-	        				}
-		        			return (!contains);
+	        			boolean canDeselect = false;
+	        			
+	                	if (this.getComponent().equals(cursorButton)) {
+	           						
+	           				cursorButton.setSelected(true);
+	           				rectangleButton.setSelected(false);	   						
+	           				textButton.setSelected(false);
+	           						
+	           			} else if (this.getComponent().equals(rectangleButton)) {
+	           						
+	           				cursorButton.setSelected(false);
+	      					rectangleButton.setSelected(true);	   						
+     						textButton.setSelected(false);
+     					
+	           			} else if (this.getComponent().equals(textButton)) {
+	           						
+	           				cursorButton.setSelected(false);
+	           				rectangleButton.setSelected(false);	   						
+	           				textButton.setSelected(true);
+	           					
+	  					} else {
+	  						
+	  						canDeselect = true;
+	  						
+	  					}				   			
+	        			
+	                	boolean contains = false;
+	        			if (frames[selectedFrame]!=null){
+	        				contains =isInFrame(getPoint(),selectedFrame);
 	        			}
-	        			return !isInFrame(getPoint(),selectedFrame);
+	        			
+	        			if (contains) {
+        					System.out.println("Contains");
+	        			}
+	        			if (canDeselect) {
+        					System.out.println("canDeselect");
+	        			}
+	        			return !contains && canDeselect;
 	        		}
 	        		public void action(){
 	        			fireEvent(new VirtualEvent("deselectionEvent"));
@@ -526,6 +716,7 @@ public class Storyboard extends JFrame{
 	    sm.attachTo(panel);
 		sm.addStateMachineListener(movingStateMachine);
 		movingStateMachine.addStateMachineListener(sm);
+		
 	}
 	
 	/**
@@ -615,13 +806,13 @@ public class Storyboard extends JFrame{
 		switch(section){
 			case 1:
 			case 4:
-				return LEFTX + SPACING;
+				return LEFTX + SPACING + SPACING/2;
 			case 2: 
 			case 5:
-				return LEFTX + SPACING +IMGX + SPACING;
+				return LEFTX + SPACING + SPACING/2 + IMGX + SPACING;
 			case 3:
 			case 6:
-				return LEFTX + SPACING +IMGX + SPACING +IMGX + SPACING;
+				return LEFTX + SPACING + SPACING/2 + IMGX + SPACING +IMGX + SPACING;
 		}
 		return 0;
 	}
@@ -820,6 +1011,53 @@ public class Storyboard extends JFrame{
 		panel.repaint();
 	}
 	
+	/**
+	 * Returns a real point inside a selected frame
+	 * 
+	 * @param p The point
+	 * @param section The selected frame number
+	 * @result The point inside the selected frame
+	 */
+	private Point realPointInSection(Point p, int section) {
+		
+		double x = p.getX() - frames[section].getBounds().getX();
+		double y = p.getY() - frames[section].getBounds().getY();
+		
+		Point result = new Point();
+		result.setLocation(x, y);
+		
+		return result;
+		
+	}
+	
+    /**
+     * Transforms a point in the space given 2 points. Vectorial transformation.
+     * 
+     * @param origin The origin point of the vector
+     * @param destination The end point of the vector
+     * @param transform The point to transform
+     * @return The point transformed
+     */
+    private Point transformedPoint(Point origin, Point destination, Point transform) {
+    	
+    	Point result = new Point();
+    	
+    	int dx = destination.x - origin.x;
+		int dy = destination.y - origin.y;
+		
+		double distance = Math.sqrt(dx*dx + dy*dy);
+		
+		int absDx = Math.abs(dx);
+		int absDy = Math.abs(dy);
+
+		double normVector = Math.sqrt(absDx*absDx + absDy*absDy);
+
+		result.x = (int)(transform.x + (int)(distance*(1.0/normVector))*dx);
+		result.y = (int)(transform.y + (int)(distance*(1.0/normVector))*dy);
+    	
+    	return result;
+    }
+    
 	/**
 	 * Places a dragged image which has never been placed in a frame before in a frame.
 	 * @param section
