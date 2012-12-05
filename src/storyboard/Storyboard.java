@@ -990,22 +990,25 @@ public class Storyboard extends JFrame{
 	 * 			Number of the frame in which the moved picture is placed.
 	 */
 	public void setPicAndCapInSection(int section){
-		
-		frames[picMoved].setLocation(getPicturePointofSection(section));
-		//captures[picMoved].setLocation(getCapturePointofSection(section));
-		if(section!=picMoved){
-			if(!frames[section].getDisplayList().isEmpty()){
-				frames[section].setLocation(getPicturePointofSection(picMoved));
-				//captures[section].setLocation(getCapturePointofSection(picMoved));
-				panel.repaint();
+		Canvas moved = frames[picMoved];
+		if(picMoved<section){
+			for (int i=picMoved+1;i<=section;i++){
+				frames[i].setLocation(getPicturePointofSection(i-1));
+				frames[i-1] = frames[i];
 			}
-			Canvas storeCanvas = frames[section];
-			//JTextField storeCap = captures[section];
-    		frames[section] = frames[picMoved];
-    		//captures[section] = captures[picMoved];
-    		frames[picMoved] = storeCanvas;
-    		//captures[picMoved] =storeCap;
+			moved.setLocation(getPicturePointofSection(section));
+			frames[section]= moved;
 		}
+		else{
+			for (int i=picMoved-1;i>=section;i--){
+				frames[i].setLocation(getPicturePointofSection(i+1));
+				frames[i+1] = frames[i];
+			}
+			moved.setLocation(getPicturePointofSection(section));
+			frames[section]= moved;
+			
+		}
+		
 		resetBorders();
 		updateDuplicateButtons();
 		panel.repaint();
