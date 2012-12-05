@@ -872,7 +872,7 @@ public class Storyboard extends JFrame{
 	public boolean isInColumn(int i, Point2D point2d) {
 		switch(i){
 		case 1:
-			return (point2d.getX()>=LEFTX+SPACING&&point2d.getX()<=SPACING+IMGX);
+			return (point2d.getX()>=LEFTX+SPACING&&point2d.getX()<=LEFTX+SPACING+IMGX);
 		case 2:
 			return (point2d.getX()>=LEFTX+SPACING+IMGX+SPACING&&point2d.getX()<=LEFTX+SPACING+IMGX+SPACING+IMGX);
 		case 3:
