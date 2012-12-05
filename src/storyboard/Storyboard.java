@@ -738,12 +738,8 @@ public class Storyboard extends JFrame{
 	 * 			Index of frame to duplicate
 	 */
 	public void duplicate(int i) {
-		System.out.println("dupli");
-		frames[i+1].removeAll();
-		for(int j=0; j<frames[i].getComponentCount();j++){
-			System.out.println("Comp"+j);
-			frames[i+1].add(frames[i].getComponent(j));
-		}
+		frames[i+1].removeAllShapes();
+		frames[i+1].getDisplayList().addAll(frames[i].getDisplayList());
 	}
 	
 	
@@ -1067,13 +1063,8 @@ public class Storyboard extends JFrame{
 	 * 			Section in which the image is dropped
 	 */
 	public void setNewImageInSection(int section){
-		
-		//if(captures[section]!=null){
-			//panel.remove(images[section]);
-			//panel.remove(captures[section]);
-		//}
+
 		panel.remove(newImagePanel);
-		//images[section] = newImagePanel;
 		BufferedImage bimg = newImagePanel.getImage();
 		CImage img = new CImage(filename, new Point(0,0));
 		double scale = IMGX/img.getWidth();
@@ -1081,23 +1072,6 @@ public class Storyboard extends JFrame{
 		img.scaleTo(scale);
 		img.setReferencePoint(0,0);
 		frames[section].addShape(img);
-		//captures[section] = new JTextField("Capture...");
-		//captures[section].setFont(new Font("Comic Sans MS", Font.BOLD, 14));
-		/*captures[section].addFocusListener(new FocusListener(){
-
-			@Override
-			public void focusGained(FocusEvent arg0) {
-				JTextField field = (JTextField) arg0.getSource();
-				field.selectAll();
-			}
-
-			@Override
-			public void focusLost(FocusEvent arg0) {}
-			
-		});*/
-		//captures[section].setBounds(0,0,IMGX,30);
-		//captures[section].setLocation(getCapturePointofSection(section));
-		//panel.add(captures[section],2,0);
 		resetBorders();
 		updateDuplicateButtons();
 		panel.repaint();
