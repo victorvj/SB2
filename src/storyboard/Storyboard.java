@@ -19,7 +19,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
-
+import java.awt.BasicStroke;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -294,6 +294,7 @@ public class Storyboard extends JFrame{
         				pOrig = realPointInSection(mouse, selectedFrame);
 
         				rect = new CRectangle(pOrig, 0, 0) ;
+        				rect.setOutlined(true);
         				rect.setFillPaint(Color.lightGray);
         				rect.setTransparencyFill(0);
                 		selectedFrame = whichSection(mouse);
@@ -323,8 +324,10 @@ public class Storyboard extends JFrame{
         				if (selectedShape != -1) {
         				
         					Point p = new Point();
-            				p.x = (int) c.get(selectedShape).getMinX();
-            				p.y = (int) c.get(selectedShape).getMinY();
+//            				p.x = (int) c.get(selectedShape).getMinX();
+//            				p.y = (int) c.get(selectedShape).getMinY();
+        					p.x = (int) c.get(selectedShape).getTranslateX();
+            				p.y = (int) c.get(selectedShape).getTranslateY();
             				
             				Point pTrans = transformedPoint(pOrig, pEnd, p);
             				
@@ -333,10 +336,14 @@ public class Storyboard extends JFrame{
             				System.out.println("pEnd (" + pEnd.x + ", " + pEnd.y + ")");
             				System.out.println("pTrans (" + pTrans.x + ", " + pTrans.y + ")");
 
-            				c.get(selectedShape).setReferencePoint(pTrans.x, pTrans.y);
+            				double x = 0.5f;//pTrans.x / IMGX;
+            				double y = 0.5f;//pTrans.y / IMGY;
             				
-            				System.out.println("Shape moved (" + c.get(selectedShape).getMinX() + ", " + c.get(selectedShape).getMinY() + ")");
+//            				Oh, I see. You should use the CElement.translateTo(x, y) method. And CElement.getTranslateX/Y() to retrieve the current location.
             				
+//            				c.get(selectedShape).setReferencePoint(x, y);
+            				c.get(selectedShape).translateTo(pTrans.x, pTrans.y);
+            				System.out.println("Shape moved (" + c.get(selectedShape).getTranslateX() + ", " + c.get(selectedShape).getTranslateY() + ")");
             				frames[selectedFrame].repaint();
                 			panel.repaint(); 
         					
@@ -358,7 +365,10 @@ public class Storyboard extends JFrame{
             public void leave(){
             	resetBorders();
             	flipchart.setBackground(Color.lightGray);
+        		cursorButton.setSelected(true);
+            	rectangleButton.setSelected(false);
         		rectangleButton.setEnabled(false);
+        		textButton.setSelected(false);
         		textButton.setEnabled(false);
             }
         };
