@@ -270,7 +270,9 @@ public class Storyboard extends JFrame{
         				Point mouse = (Point)this.getPoint();
                 		selectedFrame = whichSection(mouse);
                 		pOrig = realPointInSection(mouse, selectedFrame);
+                		// TODO: Is that the right method: getFilledShapes, I thought they are NOT Filled?
                 		c = frames[selectedFrame].getCanvas().getFilledShapes();
+                		
                 		int i = 0;
                 		boolean found = false;
                 		// TODO: weird, fix it 
@@ -329,20 +331,19 @@ public class Storyboard extends JFrame{
         					p.x = (int) c.get(selectedShape).getTranslateX();
             				p.y = (int) c.get(selectedShape).getTranslateY();
             				
-            				Point pTrans = transformedPoint(pOrig, pEnd, p);
-            				
-            				System.out.println("Shape origin (" + p.x + ", " + p.y + ")");
-            				System.out.println("pOrig (" + pOrig.x + ", " + pOrig.y + ")");
-            				System.out.println("pEnd (" + pEnd.x + ", " + pEnd.y + ")");
-            				System.out.println("pTrans (" + pTrans.x + ", " + pTrans.y + ")");
+//            				Point pTrans = transformedPoint(pOrig, pEnd, p);
+//            				System.out.println("Shape origin (" + p.x + ", " + p.y + ")");
+//            				System.out.println("pOrig (" + pOrig.x + ", " + pOrig.y + ")");
+//            				System.out.println("pEnd (" + pEnd.x + ", " + pEnd.y + ")");
+//            				System.out.println("pTrans (" + pTrans.x + ", " + pTrans.y + ")");
 
-            				double x = 0.5f;//pTrans.x / IMGX;
-            				double y = 0.5f;//pTrans.y / IMGY;
+            				double xH = mouse.x / IMGX;
+            				double yH = mouse.y / IMGY;
             				
 //            				Oh, I see. You should use the CElement.translateTo(x, y) method. And CElement.getTranslateX/Y() to retrieve the current location.
             				
 //            				c.get(selectedShape).setReferencePoint(x, y);
-            				c.get(selectedShape).translateTo(pTrans.x, pTrans.y);
+            				c.get(selectedShape).translateTo(xH, yH);
             				System.out.println("Shape moved (" + c.get(selectedShape).getTranslateX() + ", " + c.get(selectedShape).getTranslateY() + ")");
             				frames[selectedFrame].repaint();
                 			panel.repaint(); 
