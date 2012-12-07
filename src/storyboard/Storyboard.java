@@ -3,6 +3,7 @@ package storyboard;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -10,30 +11,26 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.awt.BasicStroke;
+import java.util.List;
+
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 
-import quicktime.std.comp.Component;
-
+import fr.lri.swingstates.canvas.CElement;
 import fr.lri.swingstates.canvas.CImage;
+import fr.lri.swingstates.canvas.CRectangle;
 import fr.lri.swingstates.canvas.CShape;
 import fr.lri.swingstates.canvas.CStateMachine;
 import fr.lri.swingstates.canvas.Canvas;
@@ -43,14 +40,11 @@ import fr.lri.swingstates.sm.JExtensionalTag;
 import fr.lri.swingstates.sm.JStateMachine;
 import fr.lri.swingstates.sm.State;
 import fr.lri.swingstates.sm.Transition;
-import fr.lri.swingstates.sm.JStateMachine.PressOnComponent;
 import fr.lri.swingstates.sm.transitions.Drag;
 import fr.lri.swingstates.sm.transitions.Event;
 import fr.lri.swingstates.sm.transitions.KeyType;
-import fr.lri.swingstates.sm.transitions.Leave;
 import fr.lri.swingstates.sm.transitions.Release;
 import fr.lri.swingstates.sm.transitions.TimeOut;
-import fr.lri.swingstates.canvas.CRectangle ;
 
 /**
  * The Storyboard application.
@@ -246,7 +240,9 @@ public class Storyboard extends JFrame{
         	CRectangle rect;
         	Point pOrig, pEnd;
         	int selectedShape;
-        	LinkedList<CShape> c;
+        	LinkedList<CElement> c;
+        	List<CShape> lista;
+        	CShape[] shapesList;
         	
         	public void enter(){
         		frames[selectedFrame].setBorder(BorderFactory.createLineBorder(Color.yellow,3));
@@ -262,38 +258,39 @@ public class Storyboard extends JFrame{
         		
         		public void action() {
         			
-        			System.out.println("press --------------------------");
-
+    				Point mouse = (Point)this.getPoint();
+            		selectedFrame = whichSection(mouse);
+            		pOrig = realPointInSection(mouse, selectedFrame);
         			
         			if (cursorButton.isSelected()) {
         				
-        				Point mouse = (Point)this.getPoint();
-                		selectedFrame = whichSection(mouse);
-                		pOrig = realPointInSection(mouse, selectedFrame);
-                		// TODO: Is that the right method: getFilledShapes, I thought they are NOT Filled?
-                		c = frames[selectedFrame].getCanvas().getFilledShapes();
-                		
-                		int i = 0;
+                		lista = frames[selectedFrame].getCanvas().getDisplayList();
+
+                		int count = lista.size();
+                		int j = count - 1;
                 		boolean found = false;
-                		// TODO: weird, fix it 
-                		for(CShape shape : c){
+                		
+                		while (j > 0 && !found) {
                 			
-                			if ((shape.contains(pOrig) != null) && shape.getClass().equals(CRectangle.class) && !found) {
-                				selectedShape = i;
+                			CShape shape = lista.get(j);
+                			
+                			if ((shape.contains(pOrig) != null) 
+                					&& (shape.getClass().equals(CRectangle.class) || shape.getClass().equals(CImage.class) ) 
+                					&& !found) {
+                				selectedShape = j;
                     			System.out.println("press FOUNDED SHAPE " + selectedShape);
                 				found = true;
-                			} else {
-                				selectedShape = -1;
-                			}
-                			i++;
-                			   // do what you like with it
+                				frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0.5f);
+                				frames[selectedFrame].repaint();
+                    			panel.repaint(); 
+                			} 
+
+                  			j --;
                 		}
+                		
+ 
         				
         			} else if (rectangleButton.isSelected()) {
-        				
-        				Point mouse = (Point)this.getPoint();
-                		selectedFrame = whichSection(mouse);
-        				pOrig = realPointInSection(mouse, selectedFrame);
 
         				rect = new CRectangle(pOrig, 0, 0) ;
         				rect.setOutlined(true);
@@ -315,9 +312,7 @@ public class Storyboard extends JFrame{
         	Transition drag = new DragOnComponent(CStateMachine.BUTTON1, ">> frameSelected") {
         		
         		public void action() {
-        			
-        			System.out.println("Dragging");
-        			
+        			        			
         			Point mouse = (Point)this.getPoint();
     				pEnd = realPointInSection(mouse, selectedFrame);
         			
@@ -325,33 +320,18 @@ public class Storyboard extends JFrame{
         				
         				if (selectedShape != -1) {
         				
-        					Point p = new Point();
-//            				p.x = (int) c.get(selectedShape).getMinX();
-//            				p.y = (int) c.get(selectedShape).getMinY();
-        					p.x = (int) c.get(selectedShape).getTranslateX();
-            				p.y = (int) c.get(selectedShape).getTranslateY();
-            				
-//            				Point pTrans = transformedPoint(pOrig, pEnd, p);
-//            				System.out.println("Shape origin (" + p.x + ", " + p.y + ")");
-//            				System.out.println("pOrig (" + pOrig.x + ", " + pOrig.y + ")");
-//            				System.out.println("pEnd (" + pEnd.x + ", " + pEnd.y + ")");
-//            				System.out.println("pTrans (" + pTrans.x + ", " + pTrans.y + ")");
+            				double xH = pEnd.x - pOrig.x;
+            				double yH = pEnd.y - pOrig.y;
 
-            				double xH = mouse.x / IMGX;
-            				double yH = mouse.y / IMGY;
+            				lista.get(selectedShape).translateBy(xH, yH);
             				
-//            				Oh, I see. You should use the CElement.translateTo(x, y) method. And CElement.getTranslateX/Y() to retrieve the current location.
-            				
-//            				c.get(selectedShape).setReferencePoint(x, y);
-            				c.get(selectedShape).translateTo(xH, yH);
-            				System.out.println("Shape moved (" + c.get(selectedShape).getTranslateX() + ", " + c.get(selectedShape).getTranslateY() + ")");
             				frames[selectedFrame].repaint();
                 			panel.repaint(); 
+                			pOrig = pEnd;
         					
         				}			
             			
         			} else if (rectangleButton.isSelected()) {
-        				
         				
         				rect.setDiagonal(pOrig, pEnd);
         				
@@ -359,6 +339,22 @@ public class Storyboard extends JFrame{
         				
         			}
        			
+        		}
+        		
+        	};
+        	
+        	Transition release = new ReleaseOnComponent(BUTTON1, ">> frameSelected") {
+        		
+        		public void action() {
+        			if (selectedShape > -1) {
+        			        				
+        				if (frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).getClass().equals(CImage.class)) {
+            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(1);
+        				} else {
+            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
+        				}
+        				
+        			}
         		}
         		
         	};
