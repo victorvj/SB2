@@ -29,6 +29,7 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 
 import fr.lri.swingstates.canvas.CElement;
+import fr.lri.swingstates.canvas.CEllipse;
 import fr.lri.swingstates.canvas.CImage;
 import fr.lri.swingstates.canvas.CRectangle;
 import fr.lri.swingstates.canvas.CShape;
@@ -117,6 +118,11 @@ public class Storyboard extends JFrame{
 	 * Rectangle button
 	 */
 	private JButton rectangleButton;
+	
+	/**
+	 * Ellipse button
+	 */
+	private JButton ellipseButton;
 	
 	/**
 	 * Text button
@@ -238,6 +244,7 @@ public class Storyboard extends JFrame{
         public State frameSelected = new State() {	
         	
         	CRectangle rect;
+        	CEllipse ellip;
         	Point pOrig, pEnd;
         	int selectedShape;
         	LinkedList<CElement> c;
@@ -249,6 +256,7 @@ public class Storyboard extends JFrame{
         		flipchart.setBackground(Color.darkGray);
         		panel.requestFocus();
         		rectangleButton.setEnabled(true);
+        		ellipseButton.setEnabled(true);
         		textButton.setEnabled(true);
         	}
    			
@@ -275,7 +283,9 @@ public class Storyboard extends JFrame{
                 			CShape shape = lista.get(j);
                 			
                 			if ((shape.contains(pOrig) != null) 
-                					&& (shape.getClass().equals(CRectangle.class) || shape.getClass().equals(CImage.class) ) 
+                					&& (shape.getClass().equals(CRectangle.class) 
+                							|| shape.getClass().equals(CEllipse.class) 
+                							|| shape.getClass().equals(CImage.class) ) 
                 					&& !found) {
                 				selectedShape = j;
                     			System.out.println("press FOUNDED SHAPE " + selectedShape);
@@ -287,9 +297,7 @@ public class Storyboard extends JFrame{
 
                   			j --;
                 		}
-                		
- 
-        				
+                		        				
         			} else if (rectangleButton.isSelected()) {
 
         				rect = new CRectangle(pOrig, 0, 0) ;
@@ -298,6 +306,17 @@ public class Storyboard extends JFrame{
         				rect.setTransparencyFill(0);
                 		selectedFrame = whichSection(mouse);
         				frames[selectedFrame].addShape(rect);
+        				frames[selectedFrame].repaint();
+            			panel.repaint(); 
+        				
+        			} else if (ellipseButton.isSelected()) {
+
+        				ellip = new CEllipse(pOrig, 0, 0) ;
+        				ellip.setOutlined(true);
+        				ellip.setFillPaint(Color.lightGray);
+        				ellip.setTransparencyFill(0);
+                		selectedFrame = whichSection(mouse);
+        				frames[selectedFrame].addShape(ellip);
         				frames[selectedFrame].repaint();
             			panel.repaint(); 
         				
@@ -335,6 +354,10 @@ public class Storyboard extends JFrame{
         				
         				rect.setDiagonal(pOrig, pEnd);
         				
+        			} else if (ellipseButton.isSelected()) {
+        				
+        				ellip.setDiagonal(pOrig, pEnd);
+        				
         			} else if (textButton.isSelected()) {
         				
         			}
@@ -364,9 +387,9 @@ public class Storyboard extends JFrame{
             	flipchart.setBackground(Color.lightGray);
         		cursorButton.setSelected(true);
             	rectangleButton.setSelected(false);
-        		rectangleButton.setEnabled(false);
+        		ellipseButton.setEnabled(false);
         		textButton.setSelected(false);
-        		textButton.setEnabled(false);
+        		textButton.setEnabled(false);	
             }
         };
         
@@ -478,18 +501,27 @@ public class Storyboard extends JFrame{
 		toolbarPanel.setPreferredSize(new Dimension(SPACING, WINY));
 		toolbarPanel.setLayout(new FlowLayout());
 		cursorButton = new JButton("C");
+		cursorButton.setToolTipText("Cursor");
 		cursorButton.setPreferredSize(new Dimension(SPACING, SPACING));
 		
 		rectangleButton = new JButton("R");
+		rectangleButton.setToolTipText("Rectangle");
 		rectangleButton.setPreferredSize(new Dimension(SPACING, SPACING));
 		rectangleButton.setEnabled(false);
 
+		ellipseButton = new JButton("E");
+		ellipseButton.setToolTipText("Ellipse");
+		ellipseButton.setPreferredSize(new Dimension(SPACING, SPACING));
+		ellipseButton.setEnabled(false);
+		
 		textButton = new JButton("T");
+		textButton.setToolTipText("Text");
 		textButton.setPreferredSize(new Dimension(SPACING, SPACING));
 		textButton.setEnabled(false);
 		
 		toolbarPanel.add(cursorButton);
 		toolbarPanel.add(rectangleButton);
+		toolbarPanel.add(ellipseButton);
 		toolbarPanel.add(textButton);
 		
 		flipchart = new JPanel(new GridLayout(2,3));
@@ -625,19 +657,29 @@ public class Storyboard extends JFrame{
 	                	if (this.getComponent().equals(cursorButton)) {
 	           						
 	           				cursorButton.setSelected(true);
-	           				rectangleButton.setSelected(false);	   						
+	           				rectangleButton.setSelected(false);
+	           				ellipseButton.setSelected(false);
 	           				textButton.setSelected(false);
 	           						
 	           			} else if (this.getComponent().equals(rectangleButton)) {
 	           						
 	           				cursorButton.setSelected(false);
-	      					rectangleButton.setSelected(true);	   						
+	      					rectangleButton.setSelected(true);
+	           				ellipseButton.setSelected(false);
      						textButton.setSelected(false);
      					
+	           			} else if (this.getComponent().equals(ellipseButton)) {
+       						
+	           				cursorButton.setSelected(false);
+	           				rectangleButton.setSelected(false);
+	           				ellipseButton.setSelected(true);
+	           				textButton.setSelected(false);
+					
 	           			} else if (this.getComponent().equals(textButton)) {
 	           						
 	           				cursorButton.setSelected(false);
-	           				rectangleButton.setSelected(false);	   						
+	           				rectangleButton.setSelected(false);
+	           				ellipseButton.setSelected(false);
 	           				textButton.setSelected(true);
 	           					
 	  					} else {
@@ -651,12 +693,6 @@ public class Storyboard extends JFrame{
 	        				contains =isInFrame(getPoint(),selectedFrame);
 	        			}
 	        			
-	        			if (contains) {
-        					System.out.println("Contains");
-	        			}
-	        			if (canDeselect) {
-        					System.out.println("canDeselect");
-	        			}
 	        			return !contains && canDeselect;
 	        		}
 	        		public void action(){
