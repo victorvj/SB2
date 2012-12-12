@@ -312,50 +312,49 @@ public class Storyboard extends JFrame {
 				}
 			};
 
-			// Transition pressCtrl = new
-			// PressOnComponent(CStateMachine.BUTTON1, CONTROL,
-			// ">> frameSelected") {
-			// public boolean guard() {
-			// System.out.println("CTROL PRESS");
-			// return cursorButton.isSelected();
-			// }
-			//
-			// public void action() {
-			//
-			// System.out.println("CTROL PRESS INSIDE");
-			//
-			// Point mouse = (Point)this.getPoint();
-			// selectedFrame = whichSection(mouse);
-			// pOrig = realPointInSection(mouse, selectedFrame);
-			//
-			// lista = frames[selectedFrame].getCanvas().getDisplayList();
-			//
-			// int count = lista.size();
-			// int j = count - 1;
-			// boolean found = false;
-			// selectedShape = -1;
-			//
-			// while (j > 0 && !found) {
-			//
-			// CShape shape = lista.get(j);
-			// frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0);
-			// if ((shape.contains(pOrig) != null)
-			// && (shape.getClass().equals(CRectangle.class)
-			// || shape.getClass().equals(CEllipse.class)
-			// || shape.getClass().equals(CImage.class) )
-			// && !found) {
-			// selectedShape = j;
-			// System.out.println("press FOUNDED SHAPE " + selectedShape);
-			// found = true;
-			// frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0.5f);
-			// frames[selectedFrame].repaint();
-			// panel.repaint();
-			// }
-			//
-			// j --;
-			// }
-			// }
-			// };
+//			Transition pressCtrl = new PressOnComponent(CStateMachine.BUTTON1, CONTROL, ">> frameSelected") {
+//				public boolean guard() {
+//					System.out.println("CTROL PRESS");
+//					return cursorButton.isSelected();
+//				}
+//			
+//				public void action() {
+//			
+//					System.out.println("CTROL PRESS INSIDE");
+//			
+//					 Point mouse = (Point)this.getPoint();
+//					 selectedFrame = whichSection(mouse);
+//					 pOrig = realPointInSection(mouse, selectedFrame);
+//					
+//					 lista = frames[selectedFrame].getCanvas().getDisplayList();
+//					
+//					 int count = lista.size();
+//					 int j = count - 1;
+//					 boolean found = false;
+//					 selectedShape = -1;
+//					
+//					 while (j > 0 && !found) {
+//					
+//						 CShape shape = lista.get(j);
+//						 frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0);
+//						 if ((shape.contains(pOrig) != null)
+//							 && (shape.getClass().equals(CRectangle.class)
+//							 || shape.getClass().equals(CEllipse.class)
+//							 || shape.getClass().equals(CImage.class) )
+//							 && !found) {
+//							 
+//							 selectedShape = j;
+//							 System.out.println("press FOUNDED SHAPE " + selectedShape);
+//							 found = true;
+//							 frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0.5f);
+//							 frames[selectedFrame].repaint();
+//							 panel.repaint();
+//						 }
+//			
+//						 j --;
+//					 }
+//				}
+//			};
 
 			Transition press = new PressOnComponent(CStateMachine.BUTTON1,
 					">> frameSelected") {
@@ -379,8 +378,7 @@ public class Storyboard extends JFrame {
 						while (j > 0 && !found) {
 
 							CShape shape = lista.get(j);
-							frames[selectedFrame].getCanvas().getDisplayList()
-									.get(j).setTransparencyFill(0);
+							setProperTransparency(shape);
 							if ((shape.contains(pOrig) != null)
 									&& (shape.getClass().equals(
 											CRectangle.class)
@@ -404,7 +402,7 @@ public class Storyboard extends JFrame {
 
 						MouseEvent m = (MouseEvent) this.getInputEvent();
 						int clicks = m.getClickCount();
-						shapeIsSelected = (clicks == 2);
+						shapeIsSelected = (clicks == 2) && (selectedShape > -1);
 						plusButton.setEnabled(shapeIsSelected);
 						minusButton.setEnabled(shapeIsSelected);
 
@@ -452,12 +450,31 @@ public class Storyboard extends JFrame {
 					Point mouse = (Point) this.getPoint();
 					pEnd = realPointInSection(mouse, selectedFrame);
 
-					if (pEnd.y < pOrig.y) {
-						frames[selectedFrame].getCanvas().getDisplayList()
-								.get(selectedShape).rotateBy(-0.1f);
+					if (pEnd.y > pOrig.y) {
+						
+						if (pEnd.x <= pOrig.x) {
+							frames[selectedFrame].getCanvas().getDisplayList()
+							.get(selectedShape).rotateBy(0.1f);
+						
+						} else {
+							
+							frames[selectedFrame].getCanvas().getDisplayList()
+							.get(selectedShape).rotateBy(-0.1f);
+							
+						}
+						
 					} else {
-						frames[selectedFrame].getCanvas().getDisplayList()
-								.get(selectedShape).rotateBy(0.1f);
+						if (pEnd.x <= pOrig.x) {
+							frames[selectedFrame].getCanvas().getDisplayList()
+							.get(selectedShape).rotateBy(0.1f);
+						
+						} else {
+							
+							frames[selectedFrame].getCanvas().getDisplayList()
+							.get(selectedShape).rotateBy(-0.1f);
+							
+						}
+						
 					}
 
 					pOrig = pEnd;
@@ -512,20 +529,8 @@ public class Storyboard extends JFrame {
 				public void action() {
 					if (selectedShape > -1 && !shapeIsSelected) {
 
-						if (frames[selectedFrame].getCanvas().getDisplayList()
-								.get(selectedShape).getClass()
-								.equals(CImage.class)) {
-							frames[selectedFrame].getCanvas().getDisplayList()
-									.get(selectedShape).setTransparencyFill(1);
-						} else if (frames[selectedFrame].getCanvas()
-								.getDisplayList().get(selectedShape).getClass()
-								.equals(CRectangle.class)
-								|| frames[selectedFrame].getCanvas()
-										.getDisplayList().get(selectedShape)
-										.getClass().equals(CEllipse.class)) {
-							frames[selectedFrame].getCanvas().getDisplayList()
-									.get(selectedShape).setTransparencyFill(0);
-						}
+						setProperTransparency(frames[selectedFrame].getCanvas().getDisplayList()
+								.get(selectedShape));
 
 					}
 				}
@@ -1329,6 +1334,22 @@ public class Storyboard extends JFrame {
 		return result;
 	}
 
+	/**
+	 * Set the proper transparency to a CShape based on the class
+	 * @param shape
+	 */
+	public void setProperTransparency(CShape shape){
+		
+		if (shape.getClass().equals(CImage.class)) {
+			shape.setTransparencyFill(1);
+		} else if (shape.getClass().equals(CRectangle.class)
+				|| shape.getClass().equals(CEllipse.class)) {
+			shape.setTransparencyFill(0);
+		}
+		
+	}
+	
+	
 	/**
 	 * Places a dragged image which has never been placed in a frame before in a
 	 * frame.
