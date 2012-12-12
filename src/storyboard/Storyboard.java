@@ -11,6 +11,8 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
@@ -24,6 +26,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -159,7 +162,7 @@ public class Storyboard extends JFrame{
 	 * An array containing the six current pictures captures.
 	 * Index 0 is empty (sorry..)
 	 */
-	//private JTextField[] captures = new JTextField[7];
+	private JTextField[] captures = new JTextField[7];
 	
 	/**
 	 * The borders of the frame which give feedforward for the drag and drop of images
@@ -677,69 +680,26 @@ public class Storyboard extends JFrame{
 			frames[i].setBorder(BorderFactory.createLineBorder(Color.BLACK));
 			frames[i].setLocation(getPicturePointofSection(i).x-3, getPicturePointofSection(i).y-3);
 			movingStateMachine.attachTo(frames[i]);
+			captures[i] = new JTextField("Capture...");
+			captures[i].setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+			captures[i].addFocusListener(new FocusListener(){
 
-//			if(i!=6){
-//				buttons[i] = new JButton(">");
-//				buttons[i].setFont(new Font("Sans-Serif", Font.BOLD, 14));
-//				buttons[i].setBounds(0,0,BUTTONSIZE,BUTTONSIZE);
-//				buttons[i].setLocation(getPicturePointofSection(i).x+IMGX+(SPACING/2)-(BUTTONSIZE/2), getPicturePointofSection(i).y+(IMGY/2)-(BUTTONSIZE/2));
-//				buttons[i].setToolTipText("Duplicate frame");
-//				buttons[i].addMouseListener(new MouseListener(){
-//					@Override
-//					public void mouseClicked(MouseEvent arg0) {}
-//
-//					@Override
-//					public void mouseEntered(MouseEvent arg0) {
-//						System.out.println("hovered"); 
-//						JButton source = (JButton) arg0.getSource();
-//						if(source.isEnabled()){
-//							source.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));
-//						}
-//							
-//					}
-//
-//					@Override
-//					public void mouseExited(MouseEvent arg0) {
-//						JButton source = (JButton) arg0.getSource();
-//						if(source.isEnabled()){
-//							source.setBorder(BorderFactory.createLineBorder(Color.black,1));
-//						}
-//					}
-//
-//					@Override
-//					public void mousePressed(MouseEvent arg0) {
-//						JButton source = (JButton) arg0.getSource();
-//						if(source.isEnabled()){
-//							source.setBorder(BorderFactory.createLineBorder(Color.red,2));
-//						}
-//						
-//					}
-//
-//					@Override
-//					public void mouseReleased(MouseEvent arg0) {
-//						JButton source = (JButton) arg0.getSource();
-//						source.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));	
-//						
-//					}
-//					
-//				});
-//				buttons[i].addActionListener(new ActionListener(){
-//					@Override
-//					public void actionPerformed(ActionEvent arg0) {
-//						System.out.println("Button clicked");
-//						JButton source = (JButton) arg0.getSource();
-//						for (int i=1;i<=5;i++){
-//							if(buttons[i]==source){
-//								duplicate(i);
-//							}
-//						}	
-//					}
-//				});
-//				panel.add(buttons[i],2,0);
-//			}
+				@Override
+				public void focusGained(FocusEvent arg0) {
+					JTextField field = (JTextField) arg0.getSource();
+					field.selectAll();
+				}
+
+				@Override
+				public void focusLost(FocusEvent arg0) {}
+				
+			});
+			captures[i].setBounds(0,0,IMGX,30);
+			captures[i].setLocation(getCapturePointofSection(i));
+			panel.add(captures[i],2,0);
+			
 			panel.add(frames[i],2,0);
 		}
-//		updateDuplicateButtons();
 		
 		
 		sm = new JStateMachine() {			
@@ -954,8 +914,8 @@ public class Storyboard extends JFrame{
 	 */
 	public void emptyFrame(int frame) {
 		frames[frame].removeAllShapes();
-		//panel.remove(captures[frame]);
-		//captures[frame]=null;
+		panel.remove(captures[frame]);
+		captures[frame]=null;
 		panel.repaint();
 	}
 
@@ -1203,7 +1163,7 @@ public class Storyboard extends JFrame{
 	 * 			The right position for a capture in this frame as a Point
 	 */
 	public Point getCapturePointofSection(int section){
-		return new Point(getXofSection(section), getYofSection(section)+IMGY+5);
+		return new Point(getXofSection(section), getYofSection(section)+IMGY+10);
 	}
 	
 	/**
@@ -1215,7 +1175,7 @@ public class Storyboard extends JFrame{
 		int x = (int) cursor.getX()-(IMGX/2);
 		int y = (int) cursor.getY()-(IMGY/2);
 		frames[picMoved].setLocation(x,y);
-		//captures[picMoved].setLocation(x,y+IMGY);
+		captures[picMoved].setLocation(x,y+IMGY);
 	}
 	
 	/**
@@ -1235,26 +1195,28 @@ public class Storyboard extends JFrame{
 	 */
 	public void setPicAndCapInSection(int section){
 		Canvas moved = frames[picMoved];
+		JTextField capMoved = captures[section];
 		if(picMoved<section){
 			for (int i=picMoved+1;i<=section;i++){
 				frames[i].setLocation(getPicturePointofSection(i-1));
+				captures[i].setLocation(getCapturePointofSection(i-1));
 				frames[i-1] = frames[i];
-			}
-			moved.setLocation(getPicturePointofSection(section));
-			frames[section]= moved;
+				captures[i-1] = captures[i];
+			}		
 		}
 		else{
 			for (int i=picMoved-1;i>=section;i--){
 				frames[i].setLocation(getPicturePointofSection(i+1));
+				captures[i].setLocation(getCapturePointofSection(i+1));
 				frames[i+1] = frames[i];
+				captures[i+1] = captures[i];
 			}
-			moved.setLocation(getPicturePointofSection(section));
-			frames[section]= moved;
-			
 		}
-		
+		moved.setLocation(getPicturePointofSection(section));
+		capMoved.setLocation(getCapturePointofSection(section));
+		frames[section]= moved;
+		captures[section]= capMoved;
 		resetBorders();
-//		updateDuplicateButtons();
 		panel.repaint();
 	}
 	
