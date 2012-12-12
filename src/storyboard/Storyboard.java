@@ -158,7 +158,7 @@ public class Storyboard extends JFrame{
 	/**
 	 * The "Duplicate Buttons" between the frames
 	 */
-	JButton buttons[] = new JButton[6];
+//	JButton buttons[] = new JButton[6];
 
 	
 	/**
@@ -199,6 +199,9 @@ public class Storyboard extends JFrame{
 	 * Length and width of the "Duplicate-Buttons" between the frames
 	 */
 	static final int BUTTONSIZE = 15;
+	
+	boolean shapeIsSelected = false;
+	int selectedShape = -1;
 	
 	/**
 	 * The StateMachine, attached directly to every image, 
@@ -246,11 +249,12 @@ public class Storyboard extends JFrame{
         	CRectangle rect;
         	CEllipse ellip;
         	Point pOrig, pEnd;
-        	int selectedShape;
         	LinkedList<CElement> c;
         	List<CShape> lista;
         	CShape[] shapesList;
-        	
+//        	boolean shapeIsSelected = false;
+//        	int selectedShape = -1;
+
         	public void enter(){
         		frames[selectedFrame].setBorder(BorderFactory.createLineBorder(Color.yellow,3));
         		flipchart.setBackground(Color.darkGray);
@@ -261,6 +265,21 @@ public class Storyboard extends JFrame{
         	}
    			
         	Transition deselect = new Event("deselectionEvent", ">> idling");
+        	
+        	Transition delete = new KeyType('d',">> idling") {
+        		
+        		public boolean guard() {        			
+        			return shapeIsSelected;
+        		}
+        		
+                public void action() {
+                	if (selectedShape > -1) {
+                		frames[selectedFrame].getCanvas().getDisplayList().remove(selectedShape);
+        				frames[selectedFrame].repaint();
+            			panel.repaint(); 
+                	}
+                }
+            };
         	
         	Transition press = new PressOnComponent(CStateMachine.BUTTON1, ">> frameSelected") {
         		
@@ -277,11 +296,12 @@ public class Storyboard extends JFrame{
                 		int count = lista.size();
                 		int j = count - 1;
                 		boolean found = false;
-                		
+            			selectedShape = -1;
+
                 		while (j > 0 && !found) {
                 			
                 			CShape shape = lista.get(j);
-                			
+            				frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0);
                 			if ((shape.contains(pOrig) != null) 
                 					&& (shape.getClass().equals(CRectangle.class) 
                 							|| shape.getClass().equals(CEllipse.class) 
@@ -294,10 +314,15 @@ public class Storyboard extends JFrame{
                 				frames[selectedFrame].repaint();
                     			panel.repaint(); 
                 			} 
-
+                			
                   			j --;
                 		}
-                		        				
+                		
+                		
+                		MouseEvent m = (MouseEvent)this.getInputEvent();
+  					   	int clicks = m.getClickCount();
+  					    shapeIsSelected = (clicks == 2);
+                		      				
         			} else if (rectangleButton.isSelected()) {
 
         				rect = new CRectangle(pOrig, 0, 0) ;
@@ -369,11 +394,12 @@ public class Storyboard extends JFrame{
         	Transition release = new ReleaseOnComponent(BUTTON1, ">> frameSelected") {
         		
         		public void action() {
-        			if (selectedShape > -1) {
+        			if (selectedShape > -1 && !shapeIsSelected) {
         			        				
         				if (frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).getClass().equals(CImage.class)) {
             				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(1);
-        				} else {
+        				} else if (frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).getClass().equals(CRectangle.class) 
+        						|| frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).getClass().equals(CEllipse.class)) {
             				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
         				}
         				
@@ -548,68 +574,68 @@ public class Storyboard extends JFrame{
 			frames[i].setLocation(getPicturePointofSection(i).x-3, getPicturePointofSection(i).y-3);
 			movingStateMachine.attachTo(frames[i]);
 
-			if(i!=6){
-				buttons[i] = new JButton(">");
-				buttons[i].setFont(new Font("Sans-Serif", Font.BOLD, 14));
-				buttons[i].setBounds(0,0,BUTTONSIZE,BUTTONSIZE);
-				buttons[i].setLocation(getPicturePointofSection(i).x+IMGX+(SPACING/2)-(BUTTONSIZE/2), getPicturePointofSection(i).y+(IMGY/2)-(BUTTONSIZE/2));
-				buttons[i].setToolTipText("Duplicate frame");
-				buttons[i].addMouseListener(new MouseListener(){
-					@Override
-					public void mouseClicked(MouseEvent arg0) {}
-
-					@Override
-					public void mouseEntered(MouseEvent arg0) {
-						System.out.println("hovered"); 
-						JButton source = (JButton) arg0.getSource();
-						if(source.isEnabled()){
-							source.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));
-						}
-							
-					}
-
-					@Override
-					public void mouseExited(MouseEvent arg0) {
-						JButton source = (JButton) arg0.getSource();
-						if(source.isEnabled()){
-							source.setBorder(BorderFactory.createLineBorder(Color.black,1));
-						}
-					}
-
-					@Override
-					public void mousePressed(MouseEvent arg0) {
-						JButton source = (JButton) arg0.getSource();
-						if(source.isEnabled()){
-							source.setBorder(BorderFactory.createLineBorder(Color.red,2));
-						}
-						
-					}
-
-					@Override
-					public void mouseReleased(MouseEvent arg0) {
-						JButton source = (JButton) arg0.getSource();
-						source.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));	
-						
-					}
-					
-				});
-				buttons[i].addActionListener(new ActionListener(){
-					@Override
-					public void actionPerformed(ActionEvent arg0) {
-						System.out.println("Button clicked");
-						JButton source = (JButton) arg0.getSource();
-						for (int i=1;i<=5;i++){
-							if(buttons[i]==source){
-								duplicate(i);
-							}
-						}	
-					}
-				});
-				panel.add(buttons[i],2,0);
-			}
+//			if(i!=6){
+//				buttons[i] = new JButton(">");
+//				buttons[i].setFont(new Font("Sans-Serif", Font.BOLD, 14));
+//				buttons[i].setBounds(0,0,BUTTONSIZE,BUTTONSIZE);
+//				buttons[i].setLocation(getPicturePointofSection(i).x+IMGX+(SPACING/2)-(BUTTONSIZE/2), getPicturePointofSection(i).y+(IMGY/2)-(BUTTONSIZE/2));
+//				buttons[i].setToolTipText("Duplicate frame");
+//				buttons[i].addMouseListener(new MouseListener(){
+//					@Override
+//					public void mouseClicked(MouseEvent arg0) {}
+//
+//					@Override
+//					public void mouseEntered(MouseEvent arg0) {
+//						System.out.println("hovered"); 
+//						JButton source = (JButton) arg0.getSource();
+//						if(source.isEnabled()){
+//							source.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));
+//						}
+//							
+//					}
+//
+//					@Override
+//					public void mouseExited(MouseEvent arg0) {
+//						JButton source = (JButton) arg0.getSource();
+//						if(source.isEnabled()){
+//							source.setBorder(BorderFactory.createLineBorder(Color.black,1));
+//						}
+//					}
+//
+//					@Override
+//					public void mousePressed(MouseEvent arg0) {
+//						JButton source = (JButton) arg0.getSource();
+//						if(source.isEnabled()){
+//							source.setBorder(BorderFactory.createLineBorder(Color.red,2));
+//						}
+//						
+//					}
+//
+//					@Override
+//					public void mouseReleased(MouseEvent arg0) {
+//						JButton source = (JButton) arg0.getSource();
+//						source.setBorder(BorderFactory.createLineBorder(Color.BLUE,2));	
+//						
+//					}
+//					
+//				});
+//				buttons[i].addActionListener(new ActionListener(){
+//					@Override
+//					public void actionPerformed(ActionEvent arg0) {
+//						System.out.println("Button clicked");
+//						JButton source = (JButton) arg0.getSource();
+//						for (int i=1;i<=5;i++){
+//							if(buttons[i]==source){
+//								duplicate(i);
+//							}
+//						}	
+//					}
+//				});
+//				panel.add(buttons[i],2,0);
+//			}
 			panel.add(frames[i],2,0);
 		}
-		updateDuplicateButtons();
+//		updateDuplicateButtons();
 		
 		
 		sm = new JStateMachine() {			
@@ -629,12 +655,37 @@ public class Storyboard extends JFrame{
 	        };
 
 	        public State selectionMode = new State(){
-	        	Transition delete = new KeyType('d',">> idling") {
+	        	
+	        	Transition deleteShape = new KeyType('d',">> selectionMode") {
+	        		
+	        		public boolean guard() {
+	        			return shapeIsSelected;
+	        		}
+	        		
 	                public void action() {
+	                	System.out.println("deleteShape");
+	                	shapeIsSelected = false;
+	                   	if (selectedShape > -1) {
+	                   		frames[selectedFrame].getCanvas().getDisplayList().remove(selectedShape);
+	            			frames[selectedFrame].repaint();
+	            			selectedShape = -1;
+	               			panel.repaint(); 
+	                   	}
+	                }
+	            };
+	        	
+	        	Transition delete = new KeyType('d',">> idling") {
+	                
+	        		public boolean guard() {
+	        			return !shapeIsSelected;
+	        		}
+	        		
+	        		public void action() {
+	                	
 	                	emptyFrame(selectedFrame);
-	                	selectedFrame = 0;
-	                	fireEvent(new VirtualEvent("deselectionEvent"));
-	                	resetBorders();
+		                selectedFrame = 0;
+		                fireEvent(new VirtualEvent("deselectionEvent"));
+		              	resetBorders();
 	                	System.out.println("delete");
 	                }
 	            };
@@ -775,33 +826,53 @@ public class Storyboard extends JFrame{
 	}
 
 	
-	/**
-	 * Duplicates the content of one frame to the next frame.
-	 * @param i
-	 * 			Index of frame to duplicate
-	 */
-	public void duplicate(int i) {
-		frames[i+1].removeAllShapes();
-		frames[i+1].getDisplayList().addAll(frames[i].getDisplayList());
-	}
+//	/**
+//	 * Duplicates the content of one frame to the next frame.
+//	 * @param i
+//	 * 			Index of frame to duplicate
+//	 */
+//	public void duplicate(int i) {
+//		System.out.println("FRAME NUMBER " + i);
+//		
+//		List<CShape> lista = frames[i].getCanvas().getDisplayList();
+//		frames[i+1].removeAllShapes();
+//		
+//		for (CShape c : lista) {
+//			
+//			try {
+//				CShape bla = new CShape();
+//				bla.cloneShape(c);
+//				frames[i+1].addShape(bla);
+//
+//			} catch (CloneNotSupportedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			
+//		}
+//		frames[i+1].repaint();
+//		panel.repaint();
+////		frames[i+1].removeAllShapes();
+////		frames[i+1].getDisplayList().addAll(frames[i].getDisplayList());
+//	}
+//	
 	
 	
-	
-	/**
-	 * Disables all Duplicate-Buttons next to empty frames and enables Duplicate-Buttons next to frames with content.
-	 * As Duplicate-Buttons duplicate the content of one frame into the next frame, they are only clickable is there is content.
-	 */
-	public void updateDuplicateButtons(){
-		for(int i=1; i<=5; i++){
-			if(frames[i].getDisplayList().isEmpty()){
-				buttons[i].setEnabled(false);
-				buttons[i].setBorder(BorderFactory.createLineBorder(Color.gray,1));
-			}
-			else{
-				buttons[i].setEnabled(true);
-			}
-		}
-	}
+//	/**
+//	 * Disables all Duplicate-Buttons next to empty frames and enables Duplicate-Buttons next to frames with content.
+//	 * As Duplicate-Buttons duplicate the content of one frame into the next frame, they are only clickable is there is content.
+//	 */
+//	public void updateDuplicateButtons(){
+//		for(int i=1; i<=5; i++){
+//			if(frames[i].getDisplayList().isEmpty()){
+//				buttons[i].setEnabled(false);
+//				buttons[i].setBorder(BorderFactory.createLineBorder(Color.gray,1));
+//			}
+//			else{
+//				buttons[i].setEnabled(true);
+//			}
+//		}
+//	}
 	
 	/**
 	 * Returns the number of the section of the flipchart which contains the given point. 
@@ -1049,7 +1120,7 @@ public class Storyboard extends JFrame{
 		}
 		
 		resetBorders();
-		updateDuplicateButtons();
+//		updateDuplicateButtons();
 		panel.repaint();
 	}
 	
@@ -1116,7 +1187,7 @@ public class Storyboard extends JFrame{
 		img.setReferencePoint(0,0);
 		frames[section].addShape(img);
 		resetBorders();
-		updateDuplicateButtons();
+//		updateDuplicateButtons();
 		panel.repaint();
 	}
 	
