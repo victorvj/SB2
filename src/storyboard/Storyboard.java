@@ -299,6 +299,49 @@ public class Storyboard extends JFrame{
                 }
             };
         	
+//            Transition pressCtrl = new PressOnComponent(CStateMachine.BUTTON1, CONTROL, ">> frameSelected") {
+//            	public boolean guard() {
+//            		System.out.println("CTROL PRESS");
+//          			return cursorButton.isSelected();
+//        		}
+//        		
+//            	public void action() {
+//        			
+//            		System.out.println("CTROL PRESS INSIDE");
+//
+//    				Point mouse = (Point)this.getPoint();
+//            		selectedFrame = whichSection(mouse);
+//            		pOrig = realPointInSection(mouse, selectedFrame);
+//        			        				
+//                	lista = frames[selectedFrame].getCanvas().getDisplayList();
+//
+//                	int count = lista.size();
+//            		int j = count - 1;
+//            		boolean found = false;
+//        			selectedShape = -1;
+//
+//        			while (j > 0 && !found) {
+//            			
+//            			CShape shape = lista.get(j);
+//        				frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0);
+//            			if ((shape.contains(pOrig) != null) 
+//            					&& (shape.getClass().equals(CRectangle.class) 
+//            							|| shape.getClass().equals(CEllipse.class) 
+//            							|| shape.getClass().equals(CImage.class) ) 
+//            					&& !found) {
+//            				selectedShape = j;
+//                			System.out.println("press FOUNDED SHAPE " + selectedShape);
+//            				found = true;
+//            				frames[selectedFrame].getCanvas().getDisplayList().get(j).setTransparencyFill(0.5f);
+//            				frames[selectedFrame].repaint();
+//                			panel.repaint(); 
+//            			} 
+//            			
+//              			j --;
+//            		}
+//            	}
+//          	}; 
+            
         	Transition press = new PressOnComponent(CStateMachine.BUTTON1, ">> frameSelected") {
         		
         		public void action() {
@@ -374,6 +417,32 @@ public class Storyboard extends JFrame{
         		
         	};
         	
+        	Transition rotate = new DragOnComponent(CStateMachine.BUTTON1, CONTROL, ">> frameSelected") {
+        		
+        		public boolean guard() {
+          			return cursorButton.isSelected();
+        		}
+        		
+        		public void action() {
+        			        
+            		System.out.println("rotate DragOnComponent");
+
+        			Point mouse = (Point)this.getPoint();
+    				pEnd = realPointInSection(mouse, selectedFrame);
+        			
+    				if (pEnd.y < pOrig.y) {
+        				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).rotateBy(-0.1f);
+    				} else {
+        				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).rotateBy(0.1f);
+    				}
+ 
+    				pOrig = pEnd; 
+    				frames[selectedFrame].repaint();
+    				
+        		}
+        		
+        	};
+        	
         	Transition drag = new DragOnComponent(CStateMachine.BUTTON1, ">> frameSelected") {
         		
         		public void action() {
@@ -433,8 +502,10 @@ public class Storyboard extends JFrame{
             	resetBorders();
             	flipchart.setBackground(Color.lightGray);
         		cursorButton.setSelected(true);
-            	rectangleButton.setSelected(false);
-        		ellipseButton.setEnabled(false);
+        		rectangleButton.setSelected(false);
+        		rectangleButton.setEnabled(false);	
+        		ellipseButton.setSelected(false);
+        		ellipseButton.setEnabled(false);	
         		textButton.setSelected(false);
         		textButton.setEnabled(false);	
             }
@@ -754,6 +825,12 @@ public class Storyboard extends JFrame{
 	      					rectangleButton.setSelected(true);
 	           				ellipseButton.setSelected(false);
      						textButton.setSelected(false);
+     						
+     						if (shapeIsSelected) {
+	            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
+	            				shapeIsSelected = false;
+	            				selectedShape = -1;
+	           				}
      					
 	           			} else if (this.getComponent().equals(ellipseButton)) {
        						
@@ -761,6 +838,12 @@ public class Storyboard extends JFrame{
 	           				rectangleButton.setSelected(false);
 	           				ellipseButton.setSelected(true);
 	           				textButton.setSelected(false);
+	           				
+	           				if (shapeIsSelected) {
+	            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
+	            				shapeIsSelected = false;
+	            				selectedShape = -1;
+	           				}
 					
 	           			} else if (this.getComponent().equals(textButton)) {
 	           						
@@ -768,6 +851,13 @@ public class Storyboard extends JFrame{
 	           				rectangleButton.setSelected(false);
 	           				ellipseButton.setSelected(false);
 	           				textButton.setSelected(true);
+	           				
+	           				if (shapeIsSelected) {
+	            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
+	            				shapeIsSelected = false;
+	            				selectedShape = -1;
+	           				}
+
 	           					
 	  					} else if (this.getComponent().equals(plusButton)&&shapeIsSelected) {
        						
