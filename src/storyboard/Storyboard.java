@@ -819,7 +819,7 @@ public class Storyboard extends JFrame{
 	 * 		The frame 
 	 */
 	public void emptyFrame(int frame) {
-		frames[frame].removeAll();
+		frames[frame].removeAllShapes();
 		//panel.remove(captures[frame]);
 		//captures[frame]=null;
 		panel.repaint();
