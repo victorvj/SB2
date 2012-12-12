@@ -46,6 +46,7 @@ import fr.lri.swingstates.sm.transitions.Event;
 import fr.lri.swingstates.sm.transitions.KeyType;
 import fr.lri.swingstates.sm.transitions.Release;
 import fr.lri.swingstates.sm.transitions.TimeOut;
+import fr.lri.swingstates.sm.jtransitions.*;
 
 /**
  * The Storyboard application.
@@ -648,7 +649,7 @@ public class Storyboard extends JFrame{
 		sm = new JStateMachine() {			
 			public State idling = new State() {		
 	        	
-	        	Transition press = new PressOnTag(imageTag, CStateMachine.BUTTON1, ">> draggingOutsideFlipchart") {
+	        	Transition press = new PressOnJTag(imageTag, CStateMachine.BUTTON1, ">> draggingOutsideFlipchart") {
 	        		public void action(){
 	        			newImagePanel = new ImagePanel(filename);
 	        			newImagePanel.setBounds(0,0,IMGX,IMGY);
