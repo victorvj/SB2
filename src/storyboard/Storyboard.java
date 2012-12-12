@@ -1195,7 +1195,7 @@ public class Storyboard extends JFrame{
 	 */
 	public void setPicAndCapInSection(int section){
 		Canvas moved = frames[picMoved];
-		JTextField capMoved = captures[section];
+		JTextField capMoved = captures[picMoved];
 		if(picMoved<section){
 			for (int i=picMoved+1;i<=section;i++){
 				frames[i].setLocation(getPicturePointofSection(i-1));
@@ -1283,7 +1283,7 @@ public class Storyboard extends JFrame{
 		img.setReferencePoint(0,0);
 		frames[section].addShape(img);
 		resetBorders();
-//		updateDuplicateButtons();
+		System.out.println("setnewpicinsec");
 		panel.repaint();
 	}
 	
