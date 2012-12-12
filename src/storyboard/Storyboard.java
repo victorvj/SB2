@@ -209,12 +209,18 @@ public class Storyboard extends JFrame{
 	 */
 	private JStateMachine movingStateMachine = new JStateMachine() {			
 		public State idling = new State() {	
-        	Transition press = new PressOnComponent(CStateMachine.BUTTON1, ">> selectOrDrag") {
-        		public boolean guard(){
-        			return !frames[whichSection(getPoint())].getDisplayList().isEmpty();
-        		}
+			public void enter(){
+        		System.out.println("idling");
+        		this.getMachine().armTimer("drag",1000, false);
+        	}
+			
+        	Transition press = new PressOnComponent(CStateMachine.BUTTON1, ">> selectOrDrag") {    		
+//        		public boolean guard(){
+//        			return !frames[whichSection(getPoint())].getDisplayList().isEmpty();
+//        		}
         		public void action(){
         			picMoved = whichSection(getPoint());
+        			System.out.println("go to selectOrDrag");
         		}
         	};
         	
@@ -222,11 +228,11 @@ public class Storyboard extends JFrame{
         
         public State selectOrDrag = new State() {	
         	public void enter(){
+        		System.out.println("enter selectOrDrag");
         		this.getMachine().armTimer("drag",1000, false);
         	}
         	Transition dragInside = new Drag(BUTTON1,  ">> draggingInsideFlipchart") {
         		public void action(){
-        			
             		movePicAndCap(getPoint());
             		panel.repaint(); 
             		movingStateMachine.disarmTimer("drag");
@@ -236,6 +242,7 @@ public class Storyboard extends JFrame{
         	Transition timeout = new TimeOut(">> draggingInsideFlipchart");
             Transition release = new Release(CStateMachine.BUTTON1, ">> frameSelected") {
             	public void action(){
+            		System.out.println("selectionEvent");
             		selectedFrame = whichSection(getPoint());
             		fireEvent(new VirtualEvent("selectionEvent"));
             		System.out.println(selectedFrame);
