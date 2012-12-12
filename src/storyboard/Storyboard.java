@@ -746,6 +746,8 @@ public class Storyboard extends JFrame{
 	           				rectangleButton.setSelected(false);
 	           				ellipseButton.setSelected(false);
 	           				textButton.setSelected(false);
+	           				plusButton.setSelected(false);
+	           				minusButton.setSelected(false);
 	           						
 	           			} else if (this.getComponent().equals(rectangleButton)) {
 	           						
@@ -753,6 +755,8 @@ public class Storyboard extends JFrame{
 	      					rectangleButton.setSelected(true);
 	           				ellipseButton.setSelected(false);
      						textButton.setSelected(false);
+     						plusButton.setSelected(false);
+	           				minusButton.setSelected(false);
      					
 	           			} else if (this.getComponent().equals(ellipseButton)) {
        						
@@ -760,6 +764,8 @@ public class Storyboard extends JFrame{
 	           				rectangleButton.setSelected(false);
 	           				ellipseButton.setSelected(true);
 	           				textButton.setSelected(false);
+	           				plusButton.setSelected(false);
+	           				minusButton.setSelected(false);
 					
 	           			} else if (this.getComponent().equals(textButton)) {
 	           						
@@ -767,8 +773,28 @@ public class Storyboard extends JFrame{
 	           				rectangleButton.setSelected(false);
 	           				ellipseButton.setSelected(false);
 	           				textButton.setSelected(true);
+	           				plusButton.setSelected(false);
+	           				minusButton.setSelected(false);
 	           					
-	  					} else {
+	  					} else if (this.getComponent().equals(plusButton)&&shapeIsSelected) {
+       						
+	           				cursorButton.setSelected(false);
+	           				rectangleButton.setSelected(false);
+	           				ellipseButton.setSelected(false);
+	           				textButton.setSelected(false);
+	           				plusButton.setSelected(true);
+	           				minusButton.setSelected(false);
+	           					
+	  					}else if (this.getComponent().equals(textButton)&&shapeIsSelected) {
+       						
+		       				cursorButton.setSelected(false);
+		       				rectangleButton.setSelected(false);
+		       				ellipseButton.setSelected(false);
+		       				textButton.setSelected(false);
+		       				plusButton.setSelected(false);
+	           				minusButton.setSelected(true);
+		       					
+						}else {
 	  						
 	  						canDeselect = true;
 	  						
