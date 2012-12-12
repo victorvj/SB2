@@ -131,6 +131,16 @@ public class Storyboard extends JFrame{
 	private JButton textButton;
 	
 	/**
+	 * Plus button
+	 */
+	private JButton plusButton;
+	
+	/**
+	 * Minus button
+	 */
+	private JButton minusButton;
+	
+	/**
 	 * The name of the currently selected File of the FileTree.
 	 */
 	private String filename;
@@ -330,6 +340,9 @@ public class Storyboard extends JFrame{
                 		MouseEvent m = (MouseEvent)this.getInputEvent();
   					   	int clicks = m.getClickCount();
   					    shapeIsSelected = (clicks == 2);
+  					    plusButton.setEnabled(shapeIsSelected);
+  					    minusButton.setEnabled(shapeIsSelected);
+	  					
                 		      				
         			} else if (rectangleButton.isSelected()) {
 
@@ -553,10 +566,22 @@ public class Storyboard extends JFrame{
 		textButton.setPreferredSize(new Dimension(SPACING, SPACING));
 		textButton.setEnabled(false);
 		
+		plusButton = new JButton("+");
+		plusButton.setToolTipText("Scale up");
+		plusButton.setPreferredSize(new Dimension(SPACING, SPACING));
+		plusButton.setEnabled(false);
+		
+		minusButton = new JButton("-");
+		minusButton.setToolTipText("Scale down");
+		minusButton.setPreferredSize(new Dimension(SPACING, SPACING));
+		minusButton.setEnabled(false);
+		
 		toolbarPanel.add(cursorButton);
 		toolbarPanel.add(rectangleButton);
 		toolbarPanel.add(ellipseButton);
 		toolbarPanel.add(textButton);
+		toolbarPanel.add(plusButton);
+		toolbarPanel.add(minusButton);
 		
 		flipchart = new JPanel(new GridLayout(2,3));
 		flipTag = new JExtensionalTag(){};
@@ -673,6 +698,8 @@ public class Storyboard extends JFrame{
 	                public void action() {
 	                	System.out.println("deleteShape");
 	                	shapeIsSelected = false;
+	                	plusButton.setEnabled(shapeIsSelected);
+  					    minusButton.setEnabled(shapeIsSelected);
 	                   	if (selectedShape > -1) {
 	                   		frames[selectedFrame].getCanvas().getDisplayList().remove(selectedShape);
 	            			frames[selectedFrame].repaint();
