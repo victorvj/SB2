@@ -1,5 +1,6 @@
 package storyboard;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -9,6 +10,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Stroke;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -132,11 +134,6 @@ public class Storyboard extends JFrame {
 	 * Ellipse button
 	 */
 	private JButton ellipseButton;
-
-	/**
-	 * Text button
-	 */
-	private JButton textButton;
 
 	/**
 	 * Plus button
@@ -280,7 +277,7 @@ public class Storyboard extends JFrame {
 
 			CRectangle rect;
 			CEllipse ellip;
-			Point pOrig, pEnd;
+			Point pOrig, pEnd, pMaster;
 			LinkedList<CElement> c;
 			List<CShape> lista;
 			CShape[] shapesList;
@@ -295,7 +292,6 @@ public class Storyboard extends JFrame {
 				panel.requestFocus();
 				rectangleButton.setEnabled(true);
 				ellipseButton.setEnabled(true);
-				textButton.setEnabled(true);
 			}
 
 			Transition deselect = new Event("deselectionEvent", ">> idling");
@@ -308,11 +304,12 @@ public class Storyboard extends JFrame {
 
 				public void action() {
 					if (selectedShape > -1) {
-						frames[selectedFrame].getCanvas().getDisplayList()
-								.remove(selectedShape);
+						frames[selectedFrame].getDisplayList().remove(selectedShape);
 						frames[selectedFrame].repaint();
 						panel.repaint();
 					}
+					
+					cursorButton.setSelected(true);
 				}
 			};
 
@@ -369,18 +366,20 @@ public class Storyboard extends JFrame {
 						Point mouse = (Point) this.getPoint();
 						selectedFrame = whichSection(mouse);
 						pOrig = realPointInSection(mouse, selectedFrame);
-	
+						
 						if (cursorButton.isSelected()) {
 	
-							lista = frames[selectedFrame].getCanvas()
-									.getDisplayList();
+							lista = frames[selectedFrame].getDisplayList();
 	
 							int count = lista.size();
+							
+							System.out.println("Content of the frame size number: " + count);
+							
 							int j = count - 1;
 							boolean found = false;
 							selectedShape = -1;
 	
-							while (j > 0 && !found) {
+							while (j >= 0 && !found) {
 	
 								CShape shape = lista.get(j);
 								setProperTransparency(shape);
@@ -395,19 +394,32 @@ public class Storyboard extends JFrame {
 									System.out.println("press FOUNDED SHAPE "
 											+ selectedShape);
 									found = true;
-									frames[selectedFrame].getCanvas()
-											.getDisplayList().get(j)
+									frames[selectedFrame].getDisplayList().get(j)
 											.setTransparencyFill(0.5f);
 									frames[selectedFrame].repaint();
 									panel.repaint();
+									
+									pMaster = pOrig;
+									pMaster.x = (int)frames[selectedFrame].getDisplayList()
+											.get(selectedShape).getCenterX();
+									pMaster.y = (int)frames[selectedFrame].getDisplayList()
+											.get(selectedShape).getCenterY();
 	
 								}
 		
 								MouseEvent m = (MouseEvent) this.getInputEvent();
 								int clicks = m.getClickCount();
 								shapeIsSelected = (clicks == 2);
-								plusButton.setEnabled(shapeIsSelected);
-								minusButton.setEnabled(shapeIsSelected);
+								
+								if (shapeIsSelected && (selectedShape > -1)) {
+									
+									shape.setTransparencyFill(0.5f);
+									plusButton.setEnabled(true);
+									minusButton.setEnabled(true);
+									frames[selectedFrame].repaint();
+
+								}
+								
 								
 								j--;
 								
@@ -419,6 +431,9 @@ public class Storyboard extends JFrame {
 							rect.setOutlined(true);
 							rect.setFillPaint(Color.lightGray);
 							rect.setTransparencyFill(0);
+							BasicStroke stroke = new BasicStroke(3);
+							rect.setStroke(stroke);
+						
 							selectedFrame = whichSection(mouse);
 							frames[selectedFrame].addShape(rect);
 							frames[selectedFrame].repaint();
@@ -430,14 +445,14 @@ public class Storyboard extends JFrame {
 							ellip.setOutlined(true);
 							ellip.setFillPaint(Color.lightGray);
 							ellip.setTransparencyFill(0);
+							BasicStroke stroke = new BasicStroke(3);
+							ellip.setStroke(stroke);
 							selectedFrame = whichSection(mouse);
 							frames[selectedFrame].addShape(ellip);
 							frames[selectedFrame].repaint();
 							panel.repaint();
 	
-						} else if (textButton.isSelected()) {
-	
-						}
+						} 
 
 					}
 
@@ -447,26 +462,30 @@ public class Storyboard extends JFrame {
 
 			Transition rotate = new DragOnComponent(CStateMachine.BUTTON1,
 					CONTROL, ">> frameSelected") {
-
+				
+				boolean from1 = false;
+				boolean from2 = false;
+				boolean from3 = false;				
+				boolean from4 = false;
+				
 				public boolean guard() {
 					return cursorButton.isSelected();
 				}
 
 				public void action() {
 					
-					if(whichSection(getPoint())==selectedFrame){
-
-						System.out.println("rotate DragOnComponent");
+					if (whichSection(getPoint())==selectedFrame){
 	
 						Point mouse = (Point) this.getPoint();
 						pEnd = realPointInSection(mouse, selectedFrame);
-	
-						if (pEnd.y < pOrig.y) {
-							frames[selectedFrame].getCanvas().getDisplayList()
-									.get(selectedShape).rotateBy(-0.1f);
+						double angle = angleInThreePoints(pMaster, pEnd, pOrig);
+												
+						if ((angle >= 0) && (selectedShape > -1)) {
+							frames[selectedFrame].getDisplayList()
+							.get(selectedShape).rotateBy(-0.05f);
 						} else {
-							frames[selectedFrame].getCanvas().getDisplayList()
-									.get(selectedShape).rotateBy(0.1f);
+							frames[selectedFrame].getDisplayList()
+							.get(selectedShape).rotateBy(0.05f);
 						}
 	
 						pOrig = pEnd;
@@ -509,9 +528,7 @@ public class Storyboard extends JFrame {
 	
 							ellip.setDiagonal(pOrig, pEnd);
 	
-						} else if (textButton.isSelected()) {
-	
-						}
+						} 
 					}
 
 				}
@@ -525,10 +542,9 @@ public class Storyboard extends JFrame {
 
 					if(whichSection(getPoint())==selectedFrame){
 
+						if ((selectedShape > -1) && !shapeIsSelected) {
 
-						if (selectedShape > -1 && !shapeIsSelected) {
-
-							setProperTransparency(frames[selectedFrame].getCanvas().getDisplayList()
+							setProperTransparency(frames[selectedFrame].getDisplayList()
 								.get(selectedShape));
 							
 						}
@@ -545,8 +561,6 @@ public class Storyboard extends JFrame {
 				rectangleButton.setEnabled(false);
 				ellipseButton.setSelected(false);
 				ellipseButton.setEnabled(false);
-				textButton.setSelected(false);
-				textButton.setEnabled(false);
 			}
 		};
 
@@ -684,13 +698,23 @@ public class Storyboard extends JFrame {
 		toolbarPanel.setLayout(new FlowLayout());
 		cursorButton = new JButton();
 		cursorButton.setToolTipText("Cursor");
+
 		cursorButton.setPreferredSize(new Dimension(SPACING, SPACING));
 		try {
 		    Image img = ImageIO.read(getClass().getResource("SelectionTool.png"));
 		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    
+		    Image imgSelected = ImageIO.read(getClass().getResource("SelectionToolSelected.png"));
+		    Image imgSelectedScaled = imgSelected.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    
 		    cursorButton.setIcon(new ImageIcon(imgscaled));
+			cursorButton.setSelectedIcon(new ImageIcon(imgSelectedScaled));
+			cursorButton.setPressedIcon(new ImageIcon(imgSelectedScaled));
+
+
 		  } catch (IOException ex) {
 		 }
+		cursorButton.setSelected(true);
 
 		rectangleButton = new JButton();
 		rectangleButton.setToolTipText("Rectangle");
@@ -698,8 +722,14 @@ public class Storyboard extends JFrame {
 		rectangleButton.setEnabled(false);
 		try {
 		    Image img = ImageIO.read(getClass().getResource("RectangleTool.png"));
-		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH );
+		    
+		    Image imgSelected = ImageIO.read(getClass().getResource("RectangleToolSelected.png"));
+		    Image imgSelectedScaled = imgSelected.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    
 		    rectangleButton.setIcon(new ImageIcon(imgscaled));
+		    rectangleButton.setSelectedIcon(new ImageIcon(imgSelectedScaled));
+		    rectangleButton.setPressedIcon(new ImageIcon(imgSelectedScaled));
 		  } catch (IOException ex) {
 		 }
 
@@ -709,15 +739,17 @@ public class Storyboard extends JFrame {
 		ellipseButton.setEnabled(false);
 		try {
 		    Image img = ImageIO.read(getClass().getResource("EllipseTool.png"));
-		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH );
+		    
+		    Image imgSelected = ImageIO.read(getClass().getResource("EllipseToolSelected.png"));
+		    Image imgSelectedScaled = imgSelected.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    
 		    ellipseButton.setIcon(new ImageIcon(imgscaled));
+		    ellipseButton.setSelectedIcon(new ImageIcon(imgSelectedScaled));
+		    ellipseButton.setPressedIcon(new ImageIcon(imgSelectedScaled));
+		    
 		  } catch (IOException ex) {
 		 }
-		
-		textButton = new JButton("T");
-		textButton.setToolTipText("Text");
-		textButton.setPreferredSize(new Dimension(SPACING, SPACING));
-		textButton.setEnabled(false);
 		
 		plusButton = new JButton("+");
 		plusButton.setToolTipText("Scale up");
@@ -732,7 +764,6 @@ public class Storyboard extends JFrame {
 		toolbarPanel.add(cursorButton);
 		toolbarPanel.add(rectangleButton);
 		toolbarPanel.add(ellipseButton);
-		toolbarPanel.add(textButton);
 		toolbarPanel.add(plusButton);
 		toolbarPanel.add(minusButton);
 		
@@ -809,10 +840,10 @@ public class Storyboard extends JFrame {
 	                public void action() {
 	                	System.out.println("deleteShape");
 	                	shapeIsSelected = false;
-	                	plusButton.setEnabled(shapeIsSelected);
-  					    minusButton.setEnabled(shapeIsSelected);
+	                	plusButton.setEnabled(false);
+  					    minusButton.setEnabled(false);
 	                   	if (selectedShape > -1) {
-	                   		frames[selectedFrame].getCanvas().getDisplayList().remove(selectedShape);
+	                   		frames[selectedFrame].getDisplayList().remove(selectedShape);
 	            			frames[selectedFrame].repaint();
 	            			selectedShape = -1;
 	               			panel.repaint(); 
@@ -850,24 +881,20 @@ public class Storyboard extends JFrame {
 	        			//should return true when the cursor is on the flipchart but not on the selected frame
 	        			
 	        			boolean canDeselect = false;
-	        			
 	                	if (this.getComponent().equals(cursorButton)) {
 	           						
 	           				cursorButton.setSelected(true);
 	           				rectangleButton.setSelected(false);
 	           				ellipseButton.setSelected(false);
-	           				textButton.setSelected(false);
-
 	           						
 	           			} else if (this.getComponent().equals(rectangleButton)) {
 	           						
 	           				cursorButton.setSelected(false);
 	      					rectangleButton.setSelected(true);
 	           				ellipseButton.setSelected(false);
-     						textButton.setSelected(false);
      						
-     						if (shapeIsSelected) {
-	            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
+     						if (shapeIsSelected && (selectedShape > -1)) {
+	            				frames[selectedFrame].getDisplayList().get(selectedShape).setTransparencyFill(0);
 	            				shapeIsSelected = false;
 	            				selectedShape = -1;
 	           				}
@@ -877,29 +904,14 @@ public class Storyboard extends JFrame {
 	           				cursorButton.setSelected(false);
 	           				rectangleButton.setSelected(false);
 	           				ellipseButton.setSelected(true);
-	           				textButton.setSelected(false);
 	           				
-	           				if (shapeIsSelected) {
-	            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
+	           				if (shapeIsSelected && (selectedShape > -1)) {
+	            				frames[selectedFrame].getDisplayList().get(selectedShape).setTransparencyFill(0);
 	            				shapeIsSelected = false;
 	            				selectedShape = -1;
 	           				}
 					
-	           			} else if (this.getComponent().equals(textButton)) {
-	           						
-	           				cursorButton.setSelected(false);
-	           				rectangleButton.setSelected(false);
-	           				ellipseButton.setSelected(false);
-	           				textButton.setSelected(true);
-	           				
-	           				if (shapeIsSelected) {
-	            				frames[selectedFrame].getCanvas().getDisplayList().get(selectedShape).setTransparencyFill(0);
-	            				shapeIsSelected = false;
-	            				selectedShape = -1;
-	           				}
-
-	           					
-	  					} else if (this.getComponent().equals(plusButton)&&shapeIsSelected) {
+	           			} else if (this.getComponent().equals(plusButton)&&shapeIsSelected) {
        						
 	           				frames[selectedFrame].getDisplayList().get(selectedShape).scaleBy(1.1f);
 	  					
@@ -1381,7 +1393,7 @@ public class Storyboard extends JFrame {
 	 * @param shape
 	 */
 	public void setProperTransparency(CShape shape){
-		
+				
 		if (shape.getClass().equals(CImage.class)) {
 			shape.setTransparencyFill(1);
 		} else if (shape.getClass().equals(CRectangle.class)
@@ -1391,6 +1403,19 @@ public class Storyboard extends JFrame {
 		
 	}
 	
+	/**
+	 * Returns the angle between 3 points
+	 * @param center The center point
+	 * @param current The end point
+	 * @param previous The origin point
+	 * @return The angle in rads
+	 */
+	private double angleInThreePoints(Point center, Point current, Point previous) {
+
+		  return Math.toDegrees(Math.atan2(current.x - center.x,current.y - center.y)-
+		                        Math.atan2(previous.x- center.x,previous.y- center.y));
+		
+	}
 	
 	/**
 	 * Places a dragged image which has never been placed in a frame before in a
