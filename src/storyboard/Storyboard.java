@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,10 +18,13 @@ import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
@@ -360,75 +364,80 @@ public class Storyboard extends JFrame {
 					">> frameSelected") {
 
 				public void action() {
+					if(whichSection(getPoint())==selectedFrame){
 
-					Point mouse = (Point) this.getPoint();
-					selectedFrame = whichSection(mouse);
-					pOrig = realPointInSection(mouse, selectedFrame);
-
-					if (cursorButton.isSelected()) {
-
-						lista = frames[selectedFrame].getCanvas()
-								.getDisplayList();
-
-						int count = lista.size();
-						int j = count - 1;
-						boolean found = false;
-						selectedShape = -1;
-
-						while (j > 0 && !found) {
-
-							CShape shape = lista.get(j);
-							setProperTransparency(shape);
-							if ((shape.contains(pOrig) != null)
-									&& (shape.getClass().equals(
-											CRectangle.class)
-											|| shape.getClass().equals(
-													CEllipse.class) || shape
-											.getClass().equals(CImage.class))
-									&& !found) {
-								selectedShape = j;
-								System.out.println("press FOUNDED SHAPE "
-										+ selectedShape);
-								found = true;
-								frames[selectedFrame].getCanvas()
-										.getDisplayList().get(j)
-										.setTransparencyFill(0.5f);
-								frames[selectedFrame].repaint();
-								panel.repaint();
+						Point mouse = (Point) this.getPoint();
+						selectedFrame = whichSection(mouse);
+						pOrig = realPointInSection(mouse, selectedFrame);
+	
+						if (cursorButton.isSelected()) {
+	
+							lista = frames[selectedFrame].getCanvas()
+									.getDisplayList();
+	
+							int count = lista.size();
+							int j = count - 1;
+							boolean found = false;
+							selectedShape = -1;
+	
+							while (j > 0 && !found) {
+	
+								CShape shape = lista.get(j);
+								setProperTransparency(shape);
+								if ((shape.contains(pOrig) != null)
+										&& (shape.getClass().equals(
+												CRectangle.class)
+												|| shape.getClass().equals(
+														CEllipse.class) || shape
+												.getClass().equals(CImage.class))
+										&& !found) {
+									selectedShape = j;
+									System.out.println("press FOUNDED SHAPE "
+											+ selectedShape);
+									found = true;
+									frames[selectedFrame].getCanvas()
+											.getDisplayList().get(j)
+											.setTransparencyFill(0.5f);
+									frames[selectedFrame].repaint();
+									panel.repaint();
+	
+								}
+		
+								MouseEvent m = (MouseEvent) this.getInputEvent();
+								int clicks = m.getClickCount();
+								shapeIsSelected = (clicks == 2);
+								plusButton.setEnabled(shapeIsSelected);
+								minusButton.setEnabled(shapeIsSelected);
+								
+								j--;
+								
 							}
-
-							j--;
+	
+						} else if (rectangleButton.isSelected()) {
+	
+							rect = new CRectangle(pOrig, 0, 0);
+							rect.setOutlined(true);
+							rect.setFillPaint(Color.lightGray);
+							rect.setTransparencyFill(0);
+							selectedFrame = whichSection(mouse);
+							frames[selectedFrame].addShape(rect);
+							frames[selectedFrame].repaint();
+							panel.repaint();
+	
+						} else if (ellipseButton.isSelected()) {
+	
+							ellip = new CEllipse(pOrig, 0, 0);
+							ellip.setOutlined(true);
+							ellip.setFillPaint(Color.lightGray);
+							ellip.setTransparencyFill(0);
+							selectedFrame = whichSection(mouse);
+							frames[selectedFrame].addShape(ellip);
+							frames[selectedFrame].repaint();
+							panel.repaint();
+	
+						} else if (textButton.isSelected()) {
+	
 						}
-
-						MouseEvent m = (MouseEvent) this.getInputEvent();
-						int clicks = m.getClickCount();
-						shapeIsSelected = (clicks == 2) && (selectedShape > -1);
-						plusButton.setEnabled(shapeIsSelected);
-						minusButton.setEnabled(shapeIsSelected);
-
-					} else if (rectangleButton.isSelected()) {
-
-						rect = new CRectangle(pOrig, 0, 0);
-						rect.setOutlined(true);
-						rect.setFillPaint(Color.lightGray);
-						rect.setTransparencyFill(0);
-						selectedFrame = whichSection(mouse);
-						frames[selectedFrame].addShape(rect);
-						frames[selectedFrame].repaint();
-						panel.repaint();
-
-					} else if (ellipseButton.isSelected()) {
-
-						ellip = new CEllipse(pOrig, 0, 0);
-						ellip.setOutlined(true);
-						ellip.setFillPaint(Color.lightGray);
-						ellip.setTransparencyFill(0);
-						selectedFrame = whichSection(mouse);
-						frames[selectedFrame].addShape(ellip);
-						frames[selectedFrame].repaint();
-						panel.repaint();
-
-					} else if (textButton.isSelected()) {
 
 					}
 
@@ -444,41 +453,25 @@ public class Storyboard extends JFrame {
 				}
 
 				public void action() {
+					
+					if(whichSection(getPoint())==selectedFrame){
 
-					System.out.println("rotate DragOnComponent");
-
-					Point mouse = (Point) this.getPoint();
-					pEnd = realPointInSection(mouse, selectedFrame);
-
-					if (pEnd.y > pOrig.y) {
-						
-						if (pEnd.x <= pOrig.x) {
+						System.out.println("rotate DragOnComponent");
+	
+						Point mouse = (Point) this.getPoint();
+						pEnd = realPointInSection(mouse, selectedFrame);
+	
+						if (pEnd.y < pOrig.y) {
 							frames[selectedFrame].getCanvas().getDisplayList()
-							.get(selectedShape).rotateBy(0.1f);
-						
+									.get(selectedShape).rotateBy(-0.1f);
 						} else {
-							
 							frames[selectedFrame].getCanvas().getDisplayList()
-							.get(selectedShape).rotateBy(-0.1f);
-							
+									.get(selectedShape).rotateBy(0.1f);
 						}
-						
-					} else {
-						if (pEnd.x <= pOrig.x) {
-							frames[selectedFrame].getCanvas().getDisplayList()
-							.get(selectedShape).rotateBy(0.1f);
-						
-						} else {
-							
-							frames[selectedFrame].getCanvas().getDisplayList()
-							.get(selectedShape).rotateBy(-0.1f);
-							
-						}
-						
+	
+						pOrig = pEnd;
+						frames[selectedFrame].repaint();
 					}
-
-					pOrig = pEnd;
-					frames[selectedFrame].repaint();
 
 				}
 
@@ -488,35 +481,37 @@ public class Storyboard extends JFrame {
 					">> frameSelected") {
 
 				public void action() {
+					if(whichSection(getPoint())==selectedFrame){
 
-					Point mouse = (Point) this.getPoint();
-					pEnd = realPointInSection(mouse, selectedFrame);
-
-					if (cursorButton.isSelected()) {
-
-						if (selectedShape != -1) {
-
-							double xH = pEnd.x - pOrig.x;
-							double yH = pEnd.y - pOrig.y;
-
-							lista.get(selectedShape).translateBy(xH, yH);
-
-							frames[selectedFrame].repaint();
-							panel.repaint();
-							pOrig = pEnd;
-
+						Point mouse = (Point) this.getPoint();
+						pEnd = realPointInSection(mouse, selectedFrame);
+	
+						if (cursorButton.isSelected()) {
+	
+							if (selectedShape != -1) {
+	
+								double xH = pEnd.x - pOrig.x;
+								double yH = pEnd.y - pOrig.y;
+	
+								lista.get(selectedShape).translateBy(xH, yH);
+	
+								frames[selectedFrame].repaint();
+								panel.repaint();
+								pOrig = pEnd;
+	
+							}
+	
+						} else if (rectangleButton.isSelected()) {
+	
+							rect.setDiagonal(pOrig, pEnd);
+	
+						} else if (ellipseButton.isSelected()) {
+	
+							ellip.setDiagonal(pOrig, pEnd);
+	
+						} else if (textButton.isSelected()) {
+	
 						}
-
-					} else if (rectangleButton.isSelected()) {
-
-						rect.setDiagonal(pOrig, pEnd);
-
-					} else if (ellipseButton.isSelected()) {
-
-						ellip.setDiagonal(pOrig, pEnd);
-
-					} else if (textButton.isSelected()) {
-
 					}
 
 				}
@@ -527,11 +522,16 @@ public class Storyboard extends JFrame {
 					">> frameSelected") {
 
 				public void action() {
-					if (selectedShape > -1 && !shapeIsSelected) {
 
-						setProperTransparency(frames[selectedFrame].getCanvas().getDisplayList()
+					if(whichSection(getPoint())==selectedFrame){
+
+
+						if (selectedShape > -1 && !shapeIsSelected) {
+
+							setProperTransparency(frames[selectedFrame].getCanvas().getDisplayList()
 								.get(selectedShape));
-
+							
+						}
 					}
 				}
 
@@ -551,6 +551,17 @@ public class Storyboard extends JFrame {
 		};
 
 		public State draggingInsideFlipchart = new State() {
+			
+        	Transition exitWindow= new Drag(CStateMachine.BUTTON1, ">> idling"){
+        		public boolean guard() {
+        			return ((getPoint().getX()>=WINX-30)||(getPoint().getY()<=10)||(getPoint().getY()>=WINY-30));
+        		}
+				public void action() {
+					setPicAndCapInSection(picMoved);
+					panel.repaint();
+				}
+        	};
+			
 			Transition dragOutside = new Drag(BUTTON1,
 					">> draggingOutsideFlipchart") {
 				public boolean guard() {
@@ -578,6 +589,17 @@ public class Storyboard extends JFrame {
 		};
 
 		public State draggingOutsideFlipchart = new State() {
+			
+        	Transition exitWindow= new Drag(CStateMachine.BUTTON1, ">> idling"){
+        		public boolean guard() {
+        			return ((getPoint().getX()<=10)||(getPoint().getY()<=10)||(getPoint().getY()>=WINY-30));
+        		}
+				public void action() {
+					setPicAndCapInSection(picMoved);
+					panel.repaint();
+				}
+        	};
+			
 			Transition dragInside = new Drag(BUTTON1,
 					">> draggingInsideFlipchart") {
 				public boolean guard() {
@@ -660,19 +682,37 @@ public class Storyboard extends JFrame {
 		toolbarPanel = new JPanel();
 		toolbarPanel.setPreferredSize(new Dimension(SPACING, WINY));
 		toolbarPanel.setLayout(new FlowLayout());
-		cursorButton = new JButton("C");
+		cursorButton = new JButton();
 		cursorButton.setToolTipText("Cursor");
 		cursorButton.setPreferredSize(new Dimension(SPACING, SPACING));
-		
-		rectangleButton = new JButton("R");
+		try {
+		    Image img = ImageIO.read(getClass().getResource("SelectionTool.png"));
+		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    cursorButton.setIcon(new ImageIcon(imgscaled));
+		  } catch (IOException ex) {
+		 }
+
+		rectangleButton = new JButton();
 		rectangleButton.setToolTipText("Rectangle");
 		rectangleButton.setPreferredSize(new Dimension(SPACING, SPACING));
 		rectangleButton.setEnabled(false);
+		try {
+		    Image img = ImageIO.read(getClass().getResource("RectangleTool.png"));
+		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    rectangleButton.setIcon(new ImageIcon(imgscaled));
+		  } catch (IOException ex) {
+		 }
 
-		ellipseButton = new JButton("E");
+		ellipseButton = new JButton();
 		ellipseButton.setToolTipText("Ellipse");
 		ellipseButton.setPreferredSize(new Dimension(SPACING, SPACING));
 		ellipseButton.setEnabled(false);
+		try {
+		    Image img = ImageIO.read(getClass().getResource("EllipseTool.png"));
+		    Image imgscaled = img.getScaledInstance( SPACING-10, SPACING-10,  java.awt.Image.SCALE_SMOOTH ); 
+		    ellipseButton.setIcon(new ImageIcon(imgscaled));
+		  } catch (IOException ex) {
+		 }
 		
 		textButton = new JButton("T");
 		textButton.setToolTipText("Text");
@@ -900,6 +940,8 @@ public class Storyboard extends JFrame {
 	        			panel.repaint(); 
 	        		}
 	        	};
+	        
+	        	
 	        	Transition dragOutside = new Drag(BUTTON1) {
 	        		public void action(){
 	        			moveNewImage(getPoint());
@@ -955,8 +997,7 @@ public class Storyboard extends JFrame {
 	 */
 	public void emptyFrame(int frame) {
 		frames[frame].removeAllShapes();
-		panel.remove(captures[frame]);
-		captures[frame] = null;
+		captures[frame].setText("Capture...");
 		panel.repaint();
 	}
 
@@ -1231,6 +1272,7 @@ public class Storyboard extends JFrame {
 		int x = (int) cursor.getX() - (IMGX / 2);
 		int y = (int) cursor.getY() - (IMGY / 2);
 		frames[picMoved].setLocation(x, y);
+		System.out.println("try to set capture"+picMoved);
 		captures[picMoved].setLocation(x, y + IMGY);
 	}
 
