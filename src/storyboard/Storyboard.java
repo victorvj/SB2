@@ -686,9 +686,12 @@ public class Storyboard extends JFrame {
 				if (node.isLeaf()) {
 					File file = node.file;
 					filename = file.getAbsolutePath();
-					System.out.println(filename);
-					imagePanel.setImagePath(filename);
-					imagePanel.setPreferredSize(new Dimension(IMGX,IMGY));
+					
+					if ((filename != null) && filename.toLowerCase().endsWith(".jpg") || filename.toLowerCase().endsWith(".jpeg") || filename.toLowerCase().endsWith(".gif") || filename.toLowerCase().endsWith(".png")) {
+						System.out.println(filename);
+						imagePanel.setImagePath(filename);
+						imagePanel.setPreferredSize(new Dimension(IMGX,IMGY));
+					}
 				}
 			}
 		});
