@@ -3,20 +3,15 @@ package storyboard;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.Stroke;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -54,7 +49,6 @@ import fr.lri.swingstates.sm.transitions.Event;
 import fr.lri.swingstates.sm.transitions.KeyType;
 import fr.lri.swingstates.sm.transitions.Release;
 import fr.lri.swingstates.sm.transitions.TimeOut;
-//import fr.lri.swingstates.sm.jtransitions.*;
 
 /**
  * The Storyboard application.
@@ -68,11 +62,6 @@ public class Storyboard extends JFrame {
 	 * The StateMachine attached to the LayeredPanel.
 	 */
 	private JStateMachine sm;
-
-	/**
-	 * The state machine attached to the toolbar
-	 */
-	private JStateMachine toolbarStateMachine;
 
 	/**
 	 * Contains the FileTree, the Preview and the Flipchart.
@@ -174,11 +163,6 @@ public class Storyboard extends JFrame {
 	Canvas frames[] = new Canvas[7];
 
 	/**
-	 * The "Duplicate Buttons" between the frames
-	 */
-	// JButton buttons[] = new JButton[6];
-
-	/**
 	 * Constant variables defining the layout of the application.
 	 */
 
@@ -233,10 +217,7 @@ public class Storyboard extends JFrame {
 
 			Transition press = new PressOnComponent(CStateMachine.BUTTON1,
 					">> selectOrDrag") {
-				// public boolean guard(){
-				// return
-				// !frames[whichSection(getPoint())].getDisplayList().isEmpty();
-				// }
+
 				public void action() {
 					picMoved = whichSection(getPoint());
 					System.out.println("go to selectOrDrag");
@@ -281,9 +262,6 @@ public class Storyboard extends JFrame {
 			LinkedList<CElement> c;
 			List<CShape> lista;
 			CShape[] shapesList;
-
-			// boolean shapeIsSelected = false;
-			// int selectedShape = -1;
 
 			public void enter() {
 				frames[selectedFrame].setBorder(BorderFactory.createLineBorder(
@@ -462,11 +440,6 @@ public class Storyboard extends JFrame {
 
 			Transition rotate = new DragOnComponent(CStateMachine.BUTTON1,
 					CONTROL, ">> frameSelected") {
-				
-				boolean from1 = false;
-				boolean from2 = false;
-				boolean from3 = false;				
-				boolean from4 = false;
 				
 				public boolean guard() {
 					return cursorButton.isSelected();
@@ -938,6 +911,18 @@ public class Storyboard extends JFrame {
 	        		public void action(){
 	        			fireEvent(new VirtualEvent("deselectionEvent"));
 	        			System.out.println("FIRE!!");
+	        			
+	        			if (shapeIsSelected) {
+	        				shapeIsSelected = false;
+	        				
+	        				if (selectedShape > -1) {
+	        					setProperTransparency(frames[selectedFrame].getDisplayList().get(selectedShape));
+	        					plusButton.setEnabled(false);
+	        					minusButton.setEnabled(false);
+	        				}
+	        				
+	        			}
+	        			
 	        		}
 	        		
 	        	};
@@ -1010,7 +995,7 @@ public class Storyboard extends JFrame {
 	 * @param frame
 	 *            The frame
 	 */
-	public void emptyFrame(int frame) {
+	private void emptyFrame(int frame) {
 		frames[frame].removeAllShapes();
 		captures[frame].setText("Capture...");
 		panel.repaint();
@@ -1073,7 +1058,7 @@ public class Storyboard extends JFrame {
 	 *            The point
 	 * @return the number of the section
 	 */
-	public int whichSection(Point2D p) {
+	private int whichSection(Point2D p) {
 		double x = p.getX();
 		double y = p.getY();
 		// first row
@@ -1106,7 +1091,7 @@ public class Storyboard extends JFrame {
 	 *            The section in which the picture is placed.
 	 * @return The X-value of the right position of the picture
 	 */
-	public int getXofSection(int section) {
+	private int getXofSection(int section) {
 		switch (section) {
 		case 1:
 		case 4:
@@ -1129,21 +1114,21 @@ public class Storyboard extends JFrame {
 	 * @param frame
 	 * @return True, if the given point is in the given frame
 	 */
-	public boolean isInFrame(Point2D point2d, int frame) {
+	private boolean isInFrame(Point2D point2d, int frame) {
 
 		switch (frame) {
-		case 1:
-			return (isInColumn(1, point2d) && isInRow(1, point2d));
-		case 2:
-			return (isInColumn(2, point2d) && isInRow(1, point2d));
-		case 3:
-			return (isInColumn(3, point2d) && isInRow(1, point2d));
-		case 4:
-			return (isInColumn(1, point2d) && isInRow(2, point2d));
-		case 5:
-			return (isInColumn(2, point2d) && isInRow(2, point2d));
-		case 6:
-			return (isInColumn(3, point2d) && isInRow(2, point2d));
+			case 1:
+				return (isInColumn(1, point2d) && isInRow(1, point2d));
+			case 2:
+				return (isInColumn(2, point2d) && isInRow(1, point2d));
+			case 3:
+				return (isInColumn(3, point2d) && isInRow(1, point2d));
+			case 4:
+				return (isInColumn(1, point2d) && isInRow(2, point2d));
+			case 5:
+				return (isInColumn(2, point2d) && isInRow(2, point2d));
+			case 6:
+				return (isInColumn(3, point2d) && isInRow(2, point2d));
 		}
 		return false;
 	}
@@ -1157,7 +1142,7 @@ public class Storyboard extends JFrame {
 	 *            The point
 	 * @return True if the given point is in the given row
 	 */
-	public boolean isInRow(int i, Point2D point2d) {
+	private boolean isInRow(int i, Point2D point2d) {
 		switch (i) {
 		case 1:
 			return (point2d.getY() >= SPACING && point2d.getY() <= SPACING
@@ -1179,7 +1164,7 @@ public class Storyboard extends JFrame {
 	 *            The point
 	 * @return True if the point is in the column
 	 */
-	public boolean isInColumn(int i, Point2D point2d) {
+	private boolean isInColumn(int i, Point2D point2d) {
 		switch (i) {
 		case 1:
 			return (point2d.getX() >= LEFTX + SPACING && point2d.getX() <= LEFTX
@@ -1203,7 +1188,7 @@ public class Storyboard extends JFrame {
 	 *            The section in which the picture is placed.
 	 * @return The Y-value of the right position of the picture
 	 */
-	public int getYofSection(int section) {
+	private int getYofSection(int section) {
 		switch (section) {
 		case 1:
 		case 2:
@@ -1225,7 +1210,7 @@ public class Storyboard extends JFrame {
 	 * @param frame
 	 *            Frame over which mouse hovers
 	 */
-	public void hoverFrame(int frame) {
+	private void hoverFrame(int frame) {
 		resetBorders();
 		if (frames[frame].getComponentCount() == 0 && frame != picMoved) {
 			frames[frame].setBorder(BorderFactory
@@ -1242,7 +1227,7 @@ public class Storyboard extends JFrame {
 	 * Resets all FrameBorders to black. The frames that contain pictures are
 	 * thicker than empty frames.
 	 */
-	public void resetBorders() {
+	private void resetBorders() {
 		for (int i = 1; i <= 6; i++) {
 			if (frames[i].getComponentCount() == 0) {
 				frames[i].setBorder(BorderFactory.createLineBorder(Color.black,
@@ -1261,7 +1246,7 @@ public class Storyboard extends JFrame {
 	 *            section for which picture coordinates are needed
 	 * @return The right position for a picture in this frame as a Point
 	 */
-	public Point getPicturePointofSection(int section) {
+	private Point getPicturePointofSection(int section) {
 		return new Point(getXofSection(section), getYofSection(section));
 	}
 
@@ -1272,7 +1257,7 @@ public class Storyboard extends JFrame {
 	 *            section for which capture coordinates are needed
 	 * @return The right position for a capture in this frame as a Point
 	 */
-	public Point getCapturePointofSection(int section) {
+	private Point getCapturePointofSection(int section) {
 		return new Point(getXofSection(section), getYofSection(section) + IMGY
 				+ 10);
 	}
@@ -1282,7 +1267,7 @@ public class Storyboard extends JFrame {
 	 * 
 	 * @param cursor
 	 */
-	public void movePicAndCap(Point2D cursor) {
+	private void movePicAndCap(Point2D cursor) {
 		hoverFrame(whichSection(cursor));
 		int x = (int) cursor.getX() - (IMGX / 2);
 		int y = (int) cursor.getY() - (IMGY / 2);
@@ -1297,7 +1282,7 @@ public class Storyboard extends JFrame {
 	 * 
 	 * @param cursor
 	 */
-	public void moveNewImage(Point2D cursor) {
+	private void moveNewImage(Point2D cursor) {
 		int x = (int) cursor.getX() - (IMGX / 2);
 		int y = (int) cursor.getY() - (IMGY / 2);
 		newImagePanel.setLocation(x, y);
@@ -1310,7 +1295,7 @@ public class Storyboard extends JFrame {
 	 * @param section
 	 *            Number of the frame in which the moved picture is placed.
 	 */
-	public void setPicAndCapInSection(int section) {
+	private void setPicAndCapInSection(int section) {
 		Canvas moved = frames[picMoved];
 		JTextField capMoved = captures[picMoved];
 		if (picMoved < section) {
@@ -1358,44 +1343,10 @@ public class Storyboard extends JFrame {
 	}
 
 	/**
-	 * Transforms a point in the space given 2 points. Vectorial transformation.
-	 * 
-	 * @param origin
-	 *            The origin point of the vector
-	 * @param destination
-	 *            The end point of the vector
-	 * @param transform
-	 *            The point to transform
-	 * @return The point transformed
-	 */
-	private Point transformedPoint(Point origin, Point destination,
-			Point transform) {
-
-		Point result = new Point();
-
-		int dx = destination.x - origin.x;
-		int dy = destination.y - origin.y;
-
-		double distance = Math.sqrt(dx * dx + dy * dy);
-
-		int absDx = Math.abs(dx);
-		int absDy = Math.abs(dy);
-
-		double normVector = Math.sqrt(absDx * absDx + absDy * absDy);
-
-		result.x = (int) (transform.x + (int) (distance * (1.0 / normVector))
-				* dx);
-		result.y = (int) (transform.y + (int) (distance * (1.0 / normVector))
-				* dy);
-
-		return result;
-	}
-
-	/**
 	 * Set the proper transparency to a CShape based on the class
 	 * @param shape
 	 */
-	public void setProperTransparency(CShape shape){
+	private void setProperTransparency(CShape shape){
 				
 		if (shape.getClass().equals(CImage.class)) {
 			shape.setTransparencyFill(1);
@@ -1427,10 +1378,10 @@ public class Storyboard extends JFrame {
 	 * @param section
 	 *            Section in which the image is dropped
 	 */
-	public void setNewImageInSection(int section) {
+	private void setNewImageInSection(int section) {
 
 		panel.remove(newImagePanel);
-		BufferedImage bimg = newImagePanel.getImage();
+//		BufferedImage bimg = newImagePanel.getImage();
 		CImage img = new CImage(filename, new Point(0, 0));
 		double scale = IMGX / img.getWidth();
 		System.out.println("Scale: " + scale);
@@ -1443,7 +1394,7 @@ public class Storyboard extends JFrame {
 	}
 
 	/**
-	 * Visualizes the two statemachines.
+	 * Visualizes the two state machines.
 	 */
 	public void showMachine() {
 		JFrame vizMSM = new JFrame();
